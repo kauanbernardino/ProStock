@@ -37,9 +37,9 @@ function renderizar(fornecedores) {
     for (const f of fornecedores) {
         const linha = document.createElement("tr");
         linha.innerHTML = `
-            <td>${f.razaoSocial}</td>
+            <td>${escaparHtml(f.razaoSocial)}</td>
             <td>${formatarCnpj(f.cnpj)}</td>
-            <td>${f.contato || "-"}</td>
+            <td>${escaparHtml(f.contato || "-")}</td>
             <td><span class="badge ${f.ativo ? "badge-normal" : "badge-ruptura"}">${f.ativo ? "Ativo" : "Inativo"}</span></td>
             <td style="${ehAdmin ? "" : "display:none;"}">
                 <button class="btn btn-secundario btn-pequeno" data-editar="${f.id}">Editar</button>

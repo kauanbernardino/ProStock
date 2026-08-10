@@ -12,14 +12,14 @@ async function carregarProdutos() {
     const produtos = await api.get("/api/produtos");
     const select = document.getElementById("mov-produto");
     select.innerHTML = produtos
-        .map((p) => `<option value="${p.id}">${p.sku} — ${p.nome} (${p.quantidadeAtual} un.)</option>`)
+        .map((p) => `<option value="${p.id}">${escaparHtml(p.sku)} — ${escaparHtml(p.nome)} (${p.quantidadeAtual} un.)</option>`)
         .join("");
 }
 
 async function carregarMotivos() {
     const motivos = await api.get("/api/motivos");
     const select = document.getElementById("mov-motivo");
-    select.innerHTML = motivos.map((m) => `<option value="${m.id}">${m.descricao}</option>`).join("");
+    select.innerHTML = motivos.map((m) => `<option value="${m.id}">${escaparHtml(m.descricao)}</option>`).join("");
 }
 
 async function carregarHistorico() {
@@ -54,12 +54,12 @@ function renderizarHistorico(movimentacoes) {
         const rotuloTipo = m.tipo === "ENTRADA" ? "Entrada" : "Saída";
         linha.innerHTML = `
             <td>${formatarData(m.dataHora)}</td>
-            <td>${m.produtoSku} — ${m.produtoNome}</td>
+            <td>${escaparHtml(m.produtoSku)} — ${escaparHtml(m.produtoNome)}</td>
             <td><span class="badge ${classeTipo}">${rotuloTipo}</span></td>
             <td>${m.quantidade}</td>
-            <td>${m.motivoDescricao}</td>
-            <td>${m.usuarioNome}</td>
-            <td>${m.observacao || "-"}</td>
+            <td>${escaparHtml(m.motivoDescricao)}</td>
+            <td>${escaparHtml(m.usuarioNome)}</td>
+            <td>${escaparHtml(m.observacao || "-")}</td>
         `;
         corpo.appendChild(linha);
     }

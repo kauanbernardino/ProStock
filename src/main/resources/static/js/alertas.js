@@ -37,9 +37,9 @@ function renderizar(alertas) {
         const [rotulo, classe] = rotulosTipo[a.tipo] || [a.tipo, "badge-normal"];
         const linha = document.createElement("tr");
         linha.innerHTML = `
-            <td><span class="badge ${classe}">${rotulo}</span></td>
-            <td>${a.produtoSku} — ${a.produtoNome}</td>
-            <td>${a.mensagem}</td>
+            <td><span class="badge ${classe}">${escaparHtml(rotulo)}</span></td>
+            <td>${escaparHtml(a.produtoSku)} — ${escaparHtml(a.produtoNome)}</td>
+            <td>${escaparHtml(a.mensagem)}</td>
             <td>${formatarData(a.dataCriacao)}</td>
             <td><button class="btn btn-secundario btn-pequeno" data-lido="${a.id}">Marcar como lido</button></td>
         `;

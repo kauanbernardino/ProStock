@@ -60,13 +60,13 @@ function imprimirSugestoes() {
         .map(
             (s) => `
         <tr>
-            <td>${s.sku}</td>
-            <td>${s.nome}</td>
+            <td>${escaparHtml(s.sku)}</td>
+            <td>${escaparHtml(s.nome)}</td>
             <td>${s.quantidadeAtual}</td>
             <td>${s.estoqueMinimo}</td>
             <td>${s.mediaMensalDeSaida}</td>
             <td><strong>${s.quantidadeSugerida}</strong></td>
-            <td>${s.fornecedorNome}</td>
+            <td>${escaparHtml(s.fornecedorNome)}</td>
         </tr>
     `
         )
@@ -127,13 +127,13 @@ function preencherSugestoes(sugestoes) {
     for (const s of sugestoes) {
         const linha = document.createElement("tr");
         linha.innerHTML = `
-            <td>${s.sku}</td>
-            <td>${s.nome}</td>
+            <td>${escaparHtml(s.sku)}</td>
+            <td>${escaparHtml(s.nome)}</td>
             <td>${s.quantidadeAtual}</td>
             <td>${s.estoqueMinimo}</td>
             <td>${s.mediaMensalDeSaida} un.</td>
             <td><strong>${s.quantidadeSugerida}</strong> un.</td>
-            <td>${s.fornecedorNome}</td>
+            <td>${escaparHtml(s.fornecedorNome)}</td>
         `;
         corpo.appendChild(linha);
     }

@@ -70,6 +70,12 @@ function badgeStatusEstoque(status) {
     return `<span class="badge ${classe}">${texto}</span>`;
 }
 
+function escaparHtml(texto) {
+    const div = document.createElement("div");
+    div.textContent = texto === null || texto === undefined ? "" : String(texto);
+    return div.innerHTML;
+}
+
 function exibirMensagem(elementoId, texto, tipo = "erro") {
     const el = document.getElementById(elementoId);
     if (!el) return;

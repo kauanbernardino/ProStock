@@ -29,13 +29,13 @@ let totalPaginas = 1;
 async function carregarCategorias() {
     categorias = await api.get("/api/categorias");
     const select = document.getElementById("produto-categoria");
-    select.innerHTML = categorias.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("");
+    select.innerHTML = categorias.map((c) => `<option value="${c.id}">${escaparHtml(c.nome)}</option>`).join("");
 }
 
 async function carregarFornecedores() {
     fornecedores = await api.get("/api/fornecedores");
     const select = document.getElementById("produto-fornecedor");
-    select.innerHTML = fornecedores.map((f) => `<option value="${f.id}">${f.razaoSocial}</option>`).join("");
+    select.innerHTML = fornecedores.map((f) => `<option value="${f.id}">${escaparHtml(f.razaoSocial)}</option>`).join("");
 }
 
 async function carregarProdutos() {
@@ -89,15 +89,15 @@ function renderizarProdutos(produtos) {
 
     for (const p of produtos) {
         const foto = p.imagens && p.imagens.length
-            ? `<img src="${p.imagens[0].url}" alt="${p.nome}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">`
+            ? `<img src="${escaparHtml(p.imagens[0].url)}" alt="${escaparHtml(p.nome)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">`
             : `<div style="width:40px;height:40px;border-radius:6px;background:#f1f5f9;"></div>`;
         const linha = document.createElement("tr");
         linha.innerHTML = `
             <td>${foto}</td>
-            <td>${p.sku}</td>
-            <td>${p.nome}</td>
-            <td>${p.categoriaNome}</td>
-            <td>${p.fornecedorNome}</td>
+            <td>${escaparHtml(p.sku)}</td>
+            <td>${escaparHtml(p.nome)}</td>
+            <td>${escaparHtml(p.categoriaNome)}</td>
+            <td>${escaparHtml(p.fornecedorNome)}</td>
             <td>${formatarMoeda(p.preco)}</td>
             <td>${p.quantidadeAtual}</td>
             <td>${badgeStatusEstoque(p.statusEstoque)}</td>
@@ -213,7 +213,7 @@ function renderizarGaleria(imagens) {
         .map(
             (img) => `
         <div style="position:relative;">
-            <img src="${img.url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--cor-borda);">
+            <img src="${escaparHtml(img.url)}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--cor-borda);">
             <button type="button" data-remover-imagem="${img.id}"
                 style="position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; border:none; background:var(--cor-perigo); color:#fff; font-size:12px; cursor:pointer; line-height:1;">
                 &times;

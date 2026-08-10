@@ -34,8 +34,8 @@ function renderizar(usuarios) {
     for (const u of usuarios) {
         const linha = document.createElement("tr");
         linha.innerHTML = `
-            <td>${u.nome}</td>
-            <td>${u.email}</td>
+            <td>${escaparHtml(u.nome)}</td>
+            <td>${escaparHtml(u.email)}</td>
             <td>${u.cargo === "ADMINISTRADOR" ? "Administrador" : "Funcionário"}</td>
             <td><span class="badge ${u.ativo ? "badge-normal" : "badge-ruptura"}">${u.ativo ? "Ativo" : "Inativo"}</span></td>
             <td>

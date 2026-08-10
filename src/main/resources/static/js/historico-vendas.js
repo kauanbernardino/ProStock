@@ -38,7 +38,7 @@ function renderizarVendas(vendas) {
         const linha = document.createElement("tr");
         linha.innerHTML = `
             <td>${formatarData(v.dataHora)}</td>
-            <td>${v.usuarioNome}</td>
+            <td>${escaparHtml(v.usuarioNome)}</td>
             <td>${v.quantidadeItens}</td>
             <td>${ROTULOS_FORMA_PAGAMENTO[v.formaPagamento]}</td>
             <td>${formatarMoeda(v.valorTotal)}</td>
@@ -83,7 +83,7 @@ function abrirJanelaDeImpressao(venda) {
         .map(
             (item) => `
         <tr>
-            <td>${item.produtoNome} (SKU ${item.produtoSku})</td>
+            <td>${escaparHtml(item.produtoNome)} (SKU ${escaparHtml(item.produtoSku)})</td>
             <td>${item.quantidade}</td>
             <td>${formatarMoeda(item.precoUnitario)}</td>
             <td>${formatarMoeda(item.subtotal)}</td>
@@ -95,12 +95,12 @@ function abrirJanelaDeImpressao(venda) {
     const blocoPix = venda.formaPagamento === "PIX"
         ? `
         <h3>Pagamento via Pix</h3>
-        <div class="pix">${venda.pixCopiaECola}</div>
+        <div class="pix">${escaparHtml(venda.pixCopiaECola)}</div>
     `
         : "";
 
     const blocoCancelamento = venda.status === "CANCELADA"
-        ? `<p class="cancelada">VENDA CANCELADA em ${formatarData(venda.canceladaEm)} por ${venda.canceladoPorNome}</p>`
+        ? `<p class="cancelada">VENDA CANCELADA em ${formatarData(venda.canceladaEm)} por ${escaparHtml(venda.canceladoPorNome)}</p>`
         : "";
 
     const janela = window.open("", "_blank");
@@ -127,7 +127,7 @@ function abrirJanelaDeImpressao(venda) {
             <h1>ProStock — Recibo de venda #${venda.id}</h1>
             <div class="aviso">ESTE DOCUMENTO NÃO É UMA NOTA FISCAL — apenas um comprovante interno da venda.</div>
             ${blocoCancelamento}
-            <p>Data: ${formatarData(venda.dataHora)} | Vendedor: ${venda.usuarioNome} | Pagamento: ${ROTULOS_FORMA_PAGAMENTO[venda.formaPagamento]}</p>
+            <p>Data: ${formatarData(venda.dataHora)} | Vendedor: ${escaparHtml(venda.usuarioNome)} | Pagamento: ${ROTULOS_FORMA_PAGAMENTO[venda.formaPagamento]}</p>
             <table>
                 <thead>
                 <tr><th>Produto</th><th>Qtd.</th><th>Preço unit.</th><th>Subtotal</th></tr>

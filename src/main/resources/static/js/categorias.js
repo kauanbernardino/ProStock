@@ -33,8 +33,8 @@ function renderizar(categorias) {
     for (const c of categorias) {
         const linha = document.createElement("tr");
         linha.innerHTML = `
-            <td>${c.nome}</td>
-            <td>${c.descricao || "-"}</td>
+            <td>${escaparHtml(c.nome)}</td>
+            <td>${escaparHtml(c.descricao || "-")}</td>
             <td style="${ehAdmin ? "" : "display:none;"}">
                 <button class="btn btn-perigo btn-pequeno" data-remover="${c.id}">Remover</button>
             </td>

@@ -57,8 +57,8 @@ async function buscarProdutos() {
                     (p) => `
                 <div class="resultado-item" data-id="${p.id}">
                     <div class="info">
-                        <span>${p.nome}</span>
-                        <span class="sku">SKU ${p.sku} — ${p.quantidadeAtual} un. disponível</span>
+                        <span>${escaparHtml(p.nome)}</span>
+                        <span class="sku">SKU ${escaparHtml(p.sku)} — ${p.quantidadeAtual} un. disponível</span>
                     </div>
                     <strong>${formatarMoeda(p.preco)}</strong>
                 </div>
@@ -143,7 +143,7 @@ function renderizarCarrinho() {
             const subtotal = item.preco * item.quantidade;
             const linha = document.createElement("tr");
             linha.innerHTML = `
-                <td>${item.nome}<br><span style="color:var(--cor-texto-suave); font-size:12px;">SKU ${item.sku}</span></td>
+                <td>${escaparHtml(item.nome)}<br><span style="color:var(--cor-texto-suave); font-size:12px;">SKU ${escaparHtml(item.sku)}</span></td>
                 <td>${formatarMoeda(item.preco)}</td>
                 <td>
                     <div class="qtd-controle">
@@ -216,7 +216,7 @@ function exibirRecibo(venda) {
         .map(
             (item) => `
         <tr>
-            <td>${item.produtoNome} <span style="color:var(--cor-texto-suave); font-size:12px;">(SKU ${item.produtoSku})</span></td>
+            <td>${escaparHtml(item.produtoNome)} <span style="color:var(--cor-texto-suave); font-size:12px;">(SKU ${escaparHtml(item.produtoSku)})</span></td>
             <td>${item.quantidade}</td>
             <td>${formatarMoeda(item.precoUnitario)}</td>
             <td>${formatarMoeda(item.subtotal)}</td>

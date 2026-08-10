@@ -1,6 +1,17 @@
 // Cliente HTTP simples para a API do ProStock.
 // Usa cookies de sessão (JSESSIONID) — não é necessário manipular tokens.
 
+function obterCookie(nome) {
+    const alvo = nome + "=";
+    for (const parte of document.cookie.split(";")) {
+        const c = parte.trim();
+        if (c.startsWith(alvo)) return decodeURIComponent(c.substring(alvo.length));
+    }
+    return null;
+}
+
+const METODOS_MUTAVEIS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
 const api = {
     async request(metodo, caminho, corpo) {
         const opcoes = {
@@ -8,6 +19,11 @@ const api = {
             credentials: "include",
             headers: {},
         };
+
+        if (METODOS_MUTAVEIS.has(metodo)) {
+            const token = obterCookie("XSRF-TOKEN");
+            if (token) opcoes.headers["X-XSRF-TOKEN"] = token;
+        }
 
         if (corpo !== undefined) {
             opcoes.headers["Content-Type"] = "application/json";
