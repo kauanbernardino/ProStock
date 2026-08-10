@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProStock — Fornecedores</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo">Pro<span class="ponto">Stock</span></div>
+        <nav>
+            <a href="dashboard.html">Painel geral</a>
+            <a href="produtos.html">Produtos</a>
+            <a href="categorias.html">Categorias</a>
+            <a href="venda.html">Vendas</a>
+            <a href="historico-vendas.html">Histórico de vendas</a>
+            <a href="movimentacoes.html">Movimentações</a>
+            <a href="fornecedores.html">Fornecedores</a>
+            <a href="alertas.html">Alertas</a>
+            <a href="usuarios.html" class="somente-admin">Usuários</a>
+        </nav>
+        <div class="rodape-sidebar">ProStock &copy; 2026</div>
+    </aside>
+
+    <main class="conteudo">
+        <div class="topbar">
+            <div>
+                <h1>Fornecedores</h1>
+                <div class="subtitulo">Cadastro de fornecedores de peças</div>
+            </div>
+            <div class="usuario-info">
+                <div>
+                    <div id="usuario-nome" style="font-weight:600;"></div>
+                    <div id="usuario-cargo" style="color:var(--cor-texto-suave); font-size:12px;"></div>
+                </div>
+                <div class="avatar" id="usuario-avatar"></div>
+                <button class="btn-sair" id="btn-sair">Sair</button>
+            </div>
+        </div>
+
+        <div id="mensagem" class="mensagem mensagem-erro" style="display:none;"></div>
+
+        <div class="card">
+            <div class="barra-acoes">
+                <div></div>
+                <button class="btn somente-admin" id="btn-novo-fornecedor">+ Novo fornecedor</button>
+            </div>
+            <div class="tabela-scroll">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Razão social</th>
+                        <th>CNPJ</th>
+                        <th>Contato</th>
+                        <th>Status</th>
+                        <th class="somente-admin">Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabela-fornecedores"></tbody>
+                </table>
+            </div>
+            <div id="vazio-fornecedores" class="vazio" style="display:none;">Nenhum fornecedor cadastrado.</div>
+        </div>
+    </main>
+</div>
+
+<div class="modal-fundo" id="modal-fornecedor">
+    <div class="modal">
+        <h2 id="modal-titulo">Novo fornecedor</h2>
+        <form id="form-fornecedor">
+            <input type="hidden" id="fornecedor-id">
+            <label for="fornecedor-razao-social">Razão social</label>
+            <input type="text" id="fornecedor-razao-social" required>
+
+            <div class="form-linha">
+                <div>
+                    <label for="fornecedor-cnpj">CNPJ</label>
+                    <input type="text" id="fornecedor-cnpj" placeholder="00.000.000/0000-00" inputmode="numeric" maxlength="18" required>
+                </div>
+                <div>
+                    <label for="fornecedor-contato">Contato</label>
+                    <input type="text" id="fornecedor-contato" placeholder="Telefone ou e-mail">
+                </div>
+            </div>
+
+            <div id="mensagem-modal" class="mensagem mensagem-erro" style="display:none;"></div>
+
+            <div class="modal-acoes">
+                <button type="button" class="btn btn-secundario" id="btn-cancelar-fornecedor">Cancelar</button>
+                <button type="submit" class="btn">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/fornecedores.js"></script>
+</body>
+</html>

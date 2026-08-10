@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProStock — Vendas</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .busca-produto-wrap {
+            position: relative;
+        }
+        .resultados-busca {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: var(--cor-superficie);
+            border: 1px solid var(--cor-borda);
+            border-radius: 8px;
+            box-shadow: var(--sombra);
+            max-height: 280px;
+            overflow-y: auto;
+            z-index: 20;
+            display: none;
+        }
+        .resultados-busca.aberto {
+            display: block;
+        }
+        .resultado-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 14px;
+        }
+        .resultado-item:hover {
+            background: #f8fafc;
+        }
+        .resultado-item .info {
+            display: flex;
+            flex-direction: column;
+        }
+        .resultado-item .sku {
+            font-size: 12px;
+            color: var(--cor-texto-suave);
+        }
+        .qtd-controle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .qtd-controle button {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            border: 1px solid var(--cor-borda);
+            background: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+        }
+        .qtd-controle input {
+            width: 48px;
+            text-align: center;
+            padding: 6px 4px;
+        }
+        .total-venda {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        #recibo {
+            display: none;
+        }
+        .recibo-aviso {
+            background: var(--cor-alerta-bg);
+            color: var(--cor-alerta);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .pix-caixa {
+            background: #f8fafc;
+            border: 1px dashed var(--cor-borda);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin-bottom: 12px;
+        }
+
+        .opcoes-pagamento {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        .opcao-pagamento {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            border: 2px solid var(--cor-borda);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--cor-texto);
+            transition: border-color .15s, background-color .15s, color .15s;
+        }
+        .opcao-pagamento:hover {
+            border-color: #94a3b8;
+        }
+        .opcao-pagamento input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .opcao-pagamento .icone {
+            display: flex;
+            flex-shrink: 0;
+        }
+        .opcao-pagamento.selecionada {
+            border-color: var(--cor-primaria);
+            background: #eff6ff;
+            color: var(--cor-primaria);
+        }
+
+        @media print {
+            .sidebar, .topbar, .no-imprimir {
+                display: none !important;
+            }
+            .conteudo {
+                padding: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar no-imprimir">
+        <div class="logo">Pro<span class="ponto">Stock</span></div>
+        <nav>
+            <a href="dashboard.html">Painel geral</a>
+            <a href="produtos.html">Produtos</a>
+            <a href="categorias.html">Categorias</a>
+            <a href="venda.html">Vendas</a>
+            <a href="historico-vendas.html">Histórico de vendas</a>
+            <a href="movimentacoes.html">Movimentações</a>
+            <a href="fornecedores.html">Fornecedores</a>
+            <a href="alertas.html">Alertas</a>
+            <a href="usuarios.html" class="somente-admin">Usuários</a>
+        </nav>
+        <div class="rodape-sidebar">ProStock &copy; 2026</div>
+    </aside>
+
+    <main class="conteudo">
+        <div class="topbar no-imprimir">
+            <div>
+                <h1>Vendas</h1>
+                <div class="subtitulo">Registre uma venda de balcão</div>
+            </div>
+            <div class="usuario-info">
+                <div>
+                    <div id="usuario-nome" style="font-weight:600;"></div>
+                    <div id="usuario-cargo" style="color:var(--cor-texto-suave); font-size:12px;"></div>
+                </div>
+                <div class="avatar" id="usuario-avatar"></div>
+                <button class="btn-sair" id="btn-sair">Sair</button>
+            </div>
+        </div>
+
+        <div id="mensagem" class="mensagem mensagem-erro no-imprimir" style="display:none;"></div>
+
+        <div id="tela-carrinho">
+            <div class="card no-imprimir">
+                <h2>Adicionar produto</h2>
+                <div class="busca-produto-wrap">
+                    <input type="search" id="campo-busca-produto" class="busca" placeholder="Buscar por nome ou SKU..." autocomplete="off">
+                    <div id="resultados-busca" class="resultados-busca"></div>
+                </div>
+            </div>
+
+            <div class="card no-imprimir">
+                <div class="barra-acoes">
+                    <h2 style="margin:0;">Carrinho</h2>
+                    <button type="button" class="btn btn-secundario btn-pequeno" id="btn-limpar-carrinho">Limpar carrinho</button>
+                </div>
+                <div class="tabela-scroll">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Preço</th>
+                        <th>Qtd.</th>
+                        <th>Subtotal</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabela-carrinho"></tbody>
+                </table>
+                </div>
+                <div id="carrinho-vazio" class="vazio">Nenhum item adicionado ainda.</div>
+            </div>
+
+            <div class="card no-imprimir">
+                <h2>Forma de pagamento</h2>
+                <div class="opcoes-pagamento">
+                    <label class="opcao-pagamento selecionada">
+                        <input type="radio" name="forma-pagamento" value="DINHEIRO" checked>
+                        <span class="icone">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="6" width="20" height="12" rx="2"/>
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M6 9v.01M18 15v.01"/>
+                            </svg>
+                        </span>
+                        <span>Dinheiro</span>
+                    </label>
+                    <label class="opcao-pagamento">
+                        <input type="radio" name="forma-pagamento" value="PIX">
+                        <span class="icone">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/>
+                            </svg>
+                        </span>
+                        <span>Pix</span>
+                    </label>
+                    <label class="opcao-pagamento">
+                        <input type="radio" name="forma-pagamento" value="CARTAO">
+                        <span class="icone">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="5" width="20" height="14" rx="2"/>
+                                <path d="M2 10h20"/>
+                            </svg>
+                        </span>
+                        <span>Cartão</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card no-imprimir" style="display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                    <div style="color:var(--cor-texto-suave); font-size:13px;">Total da venda</div>
+                    <div class="total-venda" id="total-venda">R$ 0,00</div>
+                </div>
+                <button class="btn" id="btn-finalizar-venda">Finalizar venda</button>
+            </div>
+        </div>
+
+        <div id="recibo">
+            <div class="card">
+                <h2>Recibo de venda #<span id="recibo-id"></span></h2>
+                <div class="recibo-aviso">ESTE DOCUMENTO NÃO É UMA NOTA FISCAL — apenas um comprovante interno da venda.</div>
+
+                <p style="font-size:13px; color:var(--cor-texto-suave);">
+                    Data: <span id="recibo-data"></span> &nbsp;|&nbsp; Vendedor: <span id="recibo-vendedor"></span>
+                    &nbsp;|&nbsp; Pagamento: <span id="recibo-forma-pagamento"></span>
+                </p>
+
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Qtd.</th>
+                        <th>Preço unit.</th>
+                        <th>Subtotal</th>
+                    </tr>
+                    </thead>
+                    <tbody id="recibo-itens"></tbody>
+                </table>
+
+                <div style="text-align:right; font-size:20px; font-weight:700; margin-top:14px;">
+                    Total: <span id="recibo-total"></span>
+                </div>
+
+                <div id="secao-pix">
+                    <h2 style="margin-top:24px;">Pagamento via Pix</h2>
+                    <p style="font-size:13px; color:var(--cor-texto-suave);">
+                        Peça ao cliente para copiar o código abaixo no aplicativo do banco dele ("Pix Copia e Cola").
+                    </p>
+                    <div class="pix-caixa" id="recibo-pix"></div>
+                    <button type="button" class="btn btn-secundario btn-pequeno no-imprimir" id="btn-copiar-pix">Copiar código Pix</button>
+                </div>
+
+                <div id="recibo-cancelada-aviso" class="mensagem mensagem-erro" style="display:none; font-weight:700;">
+                    VENDA CANCELADA — o estoque já foi devolvido.
+                </div>
+
+                <div class="modal-acoes no-imprimir">
+                    <button type="button" class="btn btn-perigo" id="btn-cancelar-venda">Cancelar esta venda</button>
+                    <button type="button" class="btn btn-secundario" id="btn-nova-venda">Nova venda</button>
+                    <button type="button" class="btn" id="btn-imprimir-recibo">Imprimir recibo</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/venda.js"></script>
+</body>
+</html>

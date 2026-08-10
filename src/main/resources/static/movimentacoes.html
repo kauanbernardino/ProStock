@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProStock — Movimentações</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo">Pro<span class="ponto">Stock</span></div>
+        <nav>
+            <a href="dashboard.html">Painel geral</a>
+            <a href="produtos.html">Produtos</a>
+            <a href="categorias.html">Categorias</a>
+            <a href="venda.html">Vendas</a>
+            <a href="historico-vendas.html">Histórico de vendas</a>
+            <a href="movimentacoes.html">Movimentações</a>
+            <a href="fornecedores.html">Fornecedores</a>
+            <a href="alertas.html">Alertas</a>
+            <a href="usuarios.html" class="somente-admin">Usuários</a>
+        </nav>
+        <div class="rodape-sidebar">ProStock &copy; 2026</div>
+    </aside>
+
+    <main class="conteudo">
+        <div class="topbar">
+            <div>
+                <h1>Movimentações</h1>
+                <div class="subtitulo">Registro de entradas e saídas de peças</div>
+            </div>
+            <div class="usuario-info">
+                <div>
+                    <div id="usuario-nome" style="font-weight:600;"></div>
+                    <div id="usuario-cargo" style="color:var(--cor-texto-suave); font-size:12px;"></div>
+                </div>
+                <div class="avatar" id="usuario-avatar"></div>
+                <button class="btn-sair" id="btn-sair">Sair</button>
+            </div>
+        </div>
+
+        <div id="mensagem" class="mensagem mensagem-erro" style="display:none;"></div>
+
+        <div class="card">
+            <h2>Registrar movimentação</h2>
+            <form id="form-movimentacao">
+                <div class="form-linha">
+                    <div>
+                        <label for="mov-produto">Produto</label>
+                        <select id="mov-produto" required></select>
+                    </div>
+                    <div>
+                        <label for="mov-tipo">Tipo</label>
+                        <select id="mov-tipo" required>
+                            <option value="ENTRADA">Entrada</option>
+                            <option value="SAIDA">Saída</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-linha">
+                    <div>
+                        <label for="mov-quantidade">Quantidade</label>
+                        <input type="number" id="mov-quantidade" min="1" required>
+                    </div>
+                    <div>
+                        <label for="mov-motivo">Motivo</label>
+                        <select id="mov-motivo" required></select>
+                    </div>
+                </div>
+                <label for="mov-observacao">Observação (opcional)</label>
+                <input type="text" id="mov-observacao" placeholder="Ex.: NF 12345, requisição da oficina...">
+
+                <div id="mensagem-form" class="mensagem mensagem-erro" style="display:none; margin-top:14px;"></div>
+
+                <button type="submit" class="btn" style="margin-top:16px;">Registrar movimentação</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Histórico recente (últimos 30 dias)</h2>
+            <div class="tabela-scroll">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Data/hora</th>
+                        <th>Produto</th>
+                        <th>Tipo</th>
+                        <th>Qtd.</th>
+                        <th>Motivo</th>
+                        <th>Usuário</th>
+                        <th>Observação</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabela-movimentacoes"></tbody>
+                </table>
+            </div>
+            <div id="vazio-movimentacoes" class="vazio" style="display:none;">Nenhuma movimentação no período.</div>
+        </div>
+    </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/movimentacoes.js"></script>
+</body>
+</html>

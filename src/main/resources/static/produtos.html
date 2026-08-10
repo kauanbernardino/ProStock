@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProStock — Produtos</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo">Pro<span class="ponto">Stock</span></div>
+        <nav>
+            <a href="dashboard.html">Painel geral</a>
+            <a href="produtos.html">Produtos</a>
+            <a href="categorias.html">Categorias</a>
+            <a href="venda.html">Vendas</a>
+            <a href="historico-vendas.html">Histórico de vendas</a>
+            <a href="movimentacoes.html">Movimentações</a>
+            <a href="fornecedores.html">Fornecedores</a>
+            <a href="alertas.html">Alertas</a>
+            <a href="usuarios.html" class="somente-admin">Usuários</a>
+        </nav>
+        <div class="rodape-sidebar">ProStock &copy; 2026</div>
+    </aside>
+
+    <main class="conteudo">
+        <div class="topbar">
+            <div>
+                <h1>Produtos</h1>
+                <div class="subtitulo">Cadastro e consulta de peças em estoque</div>
+            </div>
+            <div class="usuario-info">
+                <div>
+                    <div id="usuario-nome" style="font-weight:600;"></div>
+                    <div id="usuario-cargo" style="color:var(--cor-texto-suave); font-size:12px;"></div>
+                </div>
+                <div class="avatar" id="usuario-avatar"></div>
+                <button class="btn-sair" id="btn-sair">Sair</button>
+            </div>
+        </div>
+
+        <div id="mensagem" class="mensagem mensagem-erro" style="display:none;"></div>
+
+        <div class="card">
+            <div class="barra-acoes">
+                <input type="search" id="campo-busca" class="busca" placeholder="Buscar por nome...">
+                <button class="btn somente-admin" id="btn-novo-produto">+ Novo produto</button>
+            </div>
+
+            <div class="tabela-scroll">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Foto</th>
+                        <th>SKU</th>
+                        <th>Nome</th>
+                        <th>Categoria</th>
+                        <th>Fornecedor</th>
+                        <th>Preço</th>
+                        <th>Qtd.</th>
+                        <th>Status</th>
+                        <th class="somente-admin">Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabela-produtos"></tbody>
+                </table>
+            </div>
+            <div id="vazio-produtos" class="vazio" style="display:none;">Nenhum produto encontrado.</div>
+
+            <div id="paginacao" style="display:flex; align-items:center; justify-content:space-between; margin-top:16px; font-size:13px; color:var(--cor-texto-suave);">
+                <span id="paginacao-info"></span>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-secundario btn-pequeno" id="btn-pagina-anterior">&larr; Anterior</button>
+                    <button type="button" class="btn btn-secundario btn-pequeno" id="btn-pagina-proxima">Próxima &rarr;</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="modal-fundo" id="modal-produto">
+    <div class="modal">
+        <h2 id="modal-titulo">Novo produto</h2>
+        <form id="form-produto">
+            <input type="hidden" id="produto-id">
+            <div class="form-linha">
+                <div>
+                    <label for="produto-nome">Nome</label>
+                    <input type="text" id="produto-nome" required>
+                </div>
+                <div>
+                    <label for="produto-sku">SKU</label>
+                    <input type="text" id="produto-sku" required>
+                </div>
+            </div>
+
+            <label for="produto-descricao">Descrição</label>
+            <textarea id="produto-descricao" rows="2"></textarea>
+
+            <div class="form-linha">
+                <div>
+                    <label for="produto-preco">Preço (R$)</label>
+                    <input type="number" id="produto-preco" step="0.01" min="0" required>
+                </div>
+                <div>
+                    <label for="produto-quantidade">Quantidade atual</label>
+                    <input type="number" id="produto-quantidade" min="0" required>
+                </div>
+            </div>
+
+            <div class="form-linha">
+                <div>
+                    <label for="produto-estoque-minimo">Estoque mínimo</label>
+                    <input type="number" id="produto-estoque-minimo" min="0" required>
+                </div>
+                <div>
+                    <label for="produto-estoque-maximo">Estoque máximo</label>
+                    <input type="number" id="produto-estoque-maximo" min="0" required>
+                </div>
+            </div>
+
+            <div class="form-linha">
+                <div>
+                    <label for="produto-categoria">Categoria</label>
+                    <select id="produto-categoria" required></select>
+                </div>
+                <div>
+                    <label for="produto-fornecedor">Fornecedor</label>
+                    <select id="produto-fornecedor" required></select>
+                </div>
+            </div>
+
+            <label for="produto-localizacao">Localização física</label>
+            <input type="text" id="produto-localizacao" placeholder="Ex.: Corredor 3, Prateleira B">
+
+            <div id="mensagem-modal" class="mensagem mensagem-erro" style="display:none; margin-top:14px;"></div>
+
+            <div class="modal-acoes">
+                <button type="button" class="btn btn-secundario" id="btn-cancelar-produto">Cancelar</button>
+                <button type="submit" class="btn">Salvar</button>
+            </div>
+        </form>
+
+        <div id="secao-extras" style="display:none;">
+            <hr style="margin:22px 0; border:none; border-top:1px solid var(--cor-borda);">
+
+            <h2 style="font-size:15px;">Fotos do produto</h2>
+            <p style="color:var(--cor-texto-suave); font-size:13px; margin-top:-8px;">
+                Ajudam o vendedor a confirmar visualmente a peça quando o cliente a traz em mãos sem saber o ano do carro.
+            </p>
+            <div id="galeria-imagens" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px;"></div>
+            <input type="file" id="input-nova-imagem" accept="image/png,image/jpeg,image/webp">
+            <div id="mensagem-imagem" class="mensagem mensagem-erro" style="display:none; margin-top:10px;"></div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/produtos.js"></script>
+</body>
+</html>

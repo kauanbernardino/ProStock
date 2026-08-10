@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProStock — Painel Geral</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo">Pro<span class="ponto">Stock</span></div>
+        <nav>
+            <a href="dashboard.html">Painel geral</a>
+            <a href="produtos.html">Produtos</a>
+            <a href="categorias.html">Categorias</a>
+            <a href="venda.html">Vendas</a>
+            <a href="historico-vendas.html">Histórico de vendas</a>
+            <a href="movimentacoes.html">Movimentações</a>
+            <a href="fornecedores.html">Fornecedores</a>
+            <a href="alertas.html">Alertas</a>
+            <a href="usuarios.html" class="somente-admin">Usuários</a>
+        </nav>
+        <div class="rodape-sidebar">ProStock &copy; 2026</div>
+    </aside>
+
+    <main class="conteudo">
+        <div class="topbar">
+            <div>
+                <h1>Painel geral</h1>
+                <div class="subtitulo">Visão em tempo real do seu estoque</div>
+            </div>
+            <div class="usuario-info">
+                <div>
+                    <div id="usuario-nome" style="font-weight:600;"></div>
+                    <div id="usuario-cargo" style="color:var(--cor-texto-suave); font-size:12px;"></div>
+                </div>
+                <div class="avatar" id="usuario-avatar"></div>
+                <button class="btn-sair" id="btn-sair">Sair</button>
+            </div>
+        </div>
+
+        <div id="mensagem" class="mensagem mensagem-erro" style="display:none;"></div>
+
+        <div class="grid-kpis">
+            <div class="kpi">
+                <div class="rotulo">Valor total em estoque</div>
+                <div class="valor" id="kpi-valor-total">—</div>
+            </div>
+            <div class="kpi">
+                <div class="rotulo">Quantidade total em estoque</div>
+                <div class="valor" id="kpi-quantidade-total">—</div>
+            </div>
+            <div class="kpi">
+                <div class="rotulo">Produtos ativos</div>
+                <div class="valor" id="kpi-total-produtos">—</div>
+            </div>
+            <div class="kpi alerta">
+                <div class="rotulo">Abaixo do estoque mínimo</div>
+                <div class="valor" id="kpi-abaixo-minimo">—</div>
+            </div>
+            <div class="kpi perigo">
+                <div class="rotulo">Em ruptura</div>
+                <div class="valor" id="kpi-ruptura">—</div>
+            </div>
+            <div class="kpi">
+                <div class="rotulo">Alertas não lidos</div>
+                <div class="valor" id="kpi-alertas">—</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Movimentações da semana</h2>
+            <svg id="grafico-semanal" class="grafico-semanal" viewBox="0 0 700 220" preserveAspectRatio="none"></svg>
+            <div class="grafico-legenda">
+                <span><span class="ponto-legenda" style="background:var(--cor-sucesso);"></span> Entradas</span>
+                <span><span class="ponto-legenda" style="background:var(--cor-perigo);"></span> Saídas</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="barra-acoes">
+                <h2 style="margin:0;">Sugestão de compra (produtos abaixo do estoque mínimo)</h2>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-secundario btn-pequeno" id="btn-copiar-sugestoes">Copiar lista</button>
+                    <button type="button" class="btn btn-secundario btn-pequeno" id="btn-imprimir-sugestoes">Imprimir</button>
+                </div>
+            </div>
+            <div class="tabela-scroll">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>SKU</th>
+                        <th>Produto</th>
+                        <th>Atual</th>
+                        <th>Mínimo</th>
+                        <th>Venda média/mês</th>
+                        <th>Sugestão de compra</th>
+                        <th>Fornecedor</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabela-sugestoes"></tbody>
+                </table>
+            </div>
+            <div id="vazio-sugestoes" class="vazio" style="display:none;">Nenhum produto abaixo do estoque mínimo no momento.</div>
+        </div>
+    </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>

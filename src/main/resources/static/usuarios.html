@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProStock — Usuários</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo">Pro<span class="ponto">Stock</span></div>
+        <nav>
+            <a href="dashboard.html">Painel geral</a>
+            <a href="produtos.html">Produtos</a>
+            <a href="categorias.html">Categorias</a>
+            <a href="venda.html">Vendas</a>
+            <a href="historico-vendas.html">Histórico de vendas</a>
+            <a href="movimentacoes.html">Movimentações</a>
+            <a href="fornecedores.html">Fornecedores</a>
+            <a href="alertas.html">Alertas</a>
+            <a href="usuarios.html" class="somente-admin">Usuários</a>
+        </nav>
+        <div class="rodape-sidebar">ProStock &copy; 2026</div>
+    </aside>
+
+    <main class="conteudo">
+        <div class="topbar">
+            <div>
+                <h1>Usuários e permissões</h1>
+                <div class="subtitulo">Somente administradores podem gerenciar usuários</div>
+            </div>
+            <div class="usuario-info">
+                <div>
+                    <div id="usuario-nome" style="font-weight:600;"></div>
+                    <div id="usuario-cargo" style="color:var(--cor-texto-suave); font-size:12px;"></div>
+                </div>
+                <div class="avatar" id="usuario-avatar"></div>
+                <button class="btn-sair" id="btn-sair">Sair</button>
+            </div>
+        </div>
+
+        <div id="mensagem" class="mensagem mensagem-erro" style="display:none;"></div>
+        <div id="acesso-negado" class="mensagem mensagem-erro" style="display:none;">
+            Acesso restrito a administradores.
+        </div>
+
+        <div id="area-admin" style="display:none;">
+            <div class="card">
+                <div class="barra-acoes">
+                    <div></div>
+                    <button class="btn" id="btn-novo-usuario">+ Novo usuário</button>
+                </div>
+                <div class="tabela-scroll">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>E-mail</th>
+                            <th>Cargo</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabela-usuarios"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="modal-fundo" id="modal-usuario">
+    <div class="modal">
+        <h2 id="modal-titulo">Novo usuário</h2>
+        <form id="form-usuario">
+            <input type="hidden" id="usuario-id">
+            <label for="usuario-nome-campo">Nome</label>
+            <input type="text" id="usuario-nome-campo" required>
+
+            <label for="usuario-email">E-mail</label>
+            <input type="email" id="usuario-email" required>
+
+            <label for="usuario-senha">Senha <span id="senha-opcional" style="display:none;">(deixe em branco para manter a atual)</span></label>
+            <input type="password" id="usuario-senha" minlength="6">
+
+            <label for="usuario-cargo-campo">Cargo</label>
+            <select id="usuario-cargo-campo" required>
+                <option value="FUNCIONARIO">Funcionário</option>
+                <option value="ADMINISTRADOR">Administrador</option>
+            </select>
+
+            <div id="mensagem-modal" class="mensagem mensagem-erro" style="display:none; margin-top:14px;"></div>
+
+            <div class="modal-acoes">
+                <button type="button" class="btn btn-secundario" id="btn-cancelar-usuario">Cancelar</button>
+                <button type="submit" class="btn">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/usuarios.js"></script>
+</body>
+</html>
