@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ProStockApplication" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.prostock.ProStockApplication" />
+    <module name="prostock" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <envs>
+      <env name="SPRING_DATASOURCE_URL" value="jdbc:postgresql://localhost:5433/prostock?currentSchema=prostock" />
+      <env name="SPRING_DATASOURCE_USERNAME" value="postgres" />
+      <env name="SPRING_DATASOURCE_PASSWORD" value="postgres" />
+      <env name="UPLOAD_DIR" value="./uploads" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
