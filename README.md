@@ -1,0 +1,106 @@
+# ProStock
+
+Sistema de gerenciamento de estoque para lojas de autopeças — controle de produtos, categorias, fornecedores, movimentações de estoque, alertas automáticos, vendas de balcão (com Pix) e um painel com sugestão de compra ponderada pela demanda.
+
+Projeto de TCC, construído para uso real no dia a dia de uma loja.
+
+## Stack
+
+- Java 17 + Spring Boot 3.3.2 (Web, Data JPA, Security, Validation)
+- PostgreSQL 17
+- Spring Session JDBC (sessão de login persistida no banco)
+- Frontend em HTML/CSS/JavaScript puro (sem framework), servido como estático pelo próprio Spring
+- JUnit 5 + Mockito
+
+## Pré-requisitos
+
+- JDK 17
+- Maven 3.9+
+- PostgreSQL 17 (local ou em outra máquina acessível)
+
+## Como rodar localmente
+
+**1. Criar o banco e aplicar o schema**
+
+```bash
+createdb prostock
+psql -d prostock -f database/schema.sql
+```
+
+O script cria o schema `prostock` dentro do banco e todas as tabelas — não precisa rodar mais nada além dele.
+
+**2. Configurar a conexão (se for diferente do padrão)**
+
+Por padrão a aplicação espera Postgres em `localhost:5432`, usuário/senha `postgres`/`postgres` (veja [`application.yml`](src/main/resources/application.yml)). Para usar outra configuração, sobrescreva por variável de ambiente antes de subir a aplicação:
+
+```bash
+export SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/prostock?currentSchema=prostock"
+export DB_USERNAME=postgres
+export DB_PASSWORD=postgres
+```
+
+**3. Rodar a aplicação**
+
+```bash
+mvn spring-boot:run
+```
+
+Acesse **http://localhost:8080**.
+
+**Login padrão** (criado automaticamente na primeira execução, se o banco de usuários estiver vazio):
+
+```
+admin@prostock.com / admin123
+```
+
+> Troque essa senha pela tela de usuários assim que possível — não é seguro deixar a credencial padrão ativa fora de ambiente de teste.
+
+## Variáveis de ambiente
+
+| Variável | Padrão | Para quê |
+|---|---|---|
+| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/prostock?currentSchema=prostock` | Conexão com o banco |
+| `DB_USERNAME` / `DB_PASSWORD` | `postgres` / `postgres` | Credenciais do banco |
+| `UPLOAD_DIR` | `./uploads` | Onde ficam salvas as fotos de produto |
+| `PIX_CHAVE` | `00000000000` | Chave Pix real da loja |
+| `PIX_NOME_RECEBEDOR` | `ProStock Autopecas` | Nome exibido no código Pix gerado |
+| `PIX_CIDADE` | `SAO PAULO` | Cidade exibida no código Pix gerado |
+
+Antes de usar em produção, configure `PIX_CHAVE`, `PIX_NOME_RECEBEDOR` e `PIX_CIDADE` com os dados reais da loja.
+
+## Testes
+
+```bash
+mvn test
+```
+
+## Docker
+
+Existe um `Dockerfile` e um `docker-compose.yml` (app + Postgres) na raiz do projeto, mas ainda **não foram validados** em ambiente real — use com cautela, ou prefira o passo a passo manual acima por enquanto.
+
+## Estrutura do projeto
+
+```
+src/main/java/com/prostock/
+├── model/        entidades JPA (tabelas do banco)
+├── repository/   consultas Spring Data JPA
+├── dto/          objetos de request/response da API
+├── service/      regras de negócio
+├── controller/   endpoints REST
+├── security/     autenticação e autorização
+└── config/       configuração do Spring (segurança, CSRF, upload)
+
+src/main/resources/
+├── application.yml
+└── static/       frontend (HTML/CSS/JS)
+
+database/schema.sql   schema completo do PostgreSQL
+```
+
+## Segurança
+
+- Autenticação por sessão (cookie), senha com hash BCrypt.
+- Autorização por cargo: `ADMINISTRADOR` (acesso total) e `FUNCIONARIO` (operação do dia a dia, sem gestão de cadastros nem usuários).
+- Proteção CSRF (cookie-based) e escape de HTML em todo dado dinâmico renderizado no frontend.
+
+Este é um sistema de uso interno — não há cadastro público de usuários; contas são criadas por um administrador.
