@@ -4,10 +4,10 @@ server:
 app:
   upload-dir: ${UPLOAD_DIR:./uploads}
   pix:
-    # Configure com os dados reais da loja antes de usar em produção.
+    # Chave Pix tipo celular (Nubank) do Kauan, no formato internacional exigido pelo BR Code.
     chave: ${PIX_CHAVE:00000000000}
-    nome-recebedor: ${PIX_NOME_RECEBEDOR:ProStock Autopecas}
-    cidade: ${PIX_CIDADE:SAO PAULO}
+    nome-recebedor: ${PIX_NOME_RECEBEDOR:Kauan Bernardino da Silva}
+    cidade: ${PIX_CIDADE:ASSIS}
 
 spring:
   application:
