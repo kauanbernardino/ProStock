@@ -81,6 +81,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/alertas/**", "/api/vendas/**")
                                 .hasAnyRole("ADMINISTRADOR", "FUNCIONARIO")
 
+                        // Relatórios gerenciais são restritos ao Administrador (UC03)
+                        .requestMatchers(HttpMethod.GET, "/api/relatorios/**").hasRole("ADMINISTRADOR")
+
                         // Cadastro de produtos, categorias, fornecedores e motivos é restrito ao Administrador (UC08)
                         .requestMatchers(HttpMethod.POST, "/api/produtos/**", "/api/categorias/**",
                                 "/api/fornecedores/**", "/api/motivos/**", "/api/alertas/verificar-obsolescencia"
