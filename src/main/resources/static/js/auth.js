@@ -27,8 +27,31 @@ async function protegerPagina() {
     }
 
     marcarLinkAtivo();
+    configurarMenuMobile();
 
     return usuario;
+}
+
+// Em telas estreitas a sidebar vira uma gaveta escondida (ver @media em
+// style.css); o botão hambúrguer no topo é o único jeito de abri-la.
+function configurarMenuMobile() {
+    const botao = document.getElementById("btn-menu");
+    const sidebar = document.querySelector(".sidebar");
+    const overlay = document.getElementById("overlay-menu");
+    if (!botao || !sidebar || !overlay) return;
+
+    const abrirMenu = () => {
+        sidebar.classList.add("aberta");
+        overlay.classList.add("aberta");
+    };
+    const fecharMenu = () => {
+        sidebar.classList.remove("aberta");
+        overlay.classList.remove("aberta");
+    };
+
+    botao.addEventListener("click", abrirMenu);
+    overlay.addEventListener("click", fecharMenu);
+    sidebar.querySelectorAll("nav a").forEach((link) => link.addEventListener("click", fecharMenu));
 }
 
 function preencherUsuarioNaTopbar(usuario) {

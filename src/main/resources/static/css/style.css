@@ -548,14 +548,70 @@ input:focus, select:focus, textarea:focus {
 .giro-medio .giro-pct { color: var(--cor-alerta); }
 .giro-baixo .giro-pct { color: var(--cor-perigo); }
 
+/* ---------- Menu mobile (sidebar vira gaveta) ---------- */
+
+.btn-menu {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    background: var(--cor-superficie);
+    cursor: pointer;
+    padding: 0;
+}
+
+.btn-menu .linha {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: var(--cor-texto);
+    border-radius: 999px;
+}
+
+.overlay-menu {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    z-index: 90;
+}
+
+.overlay-menu.aberta {
+    display: block;
+}
+
 @media (max-width: 860px) {
     .app {
         grid-template-columns: 1fr;
     }
+    .btn-menu {
+        display: flex;
+    }
     .sidebar {
-        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 240px;
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+        z-index: 100;
+    }
+    .sidebar.aberta {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(15, 23, 42, 0.25);
     }
     .conteudo {
         padding: 20px;
+    }
+    .topbar {
+        flex-wrap: wrap;
+        gap: 12px;
     }
 }
