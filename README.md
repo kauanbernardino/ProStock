@@ -74,10 +74,6 @@ Antes de usar em produção, configure `PIX_CHAVE`, `PIX_NOME_RECEBEDOR` e `PIX_
 mvn test
 ```
 
-## Docker
-
-Existe um `Dockerfile` e um `docker-compose.yml` (app + Postgres) na raiz do projeto, mas ainda **não foram validados** em ambiente real — use com cautela, ou prefira o passo a passo manual acima por enquanto.
-
 ## Estrutura do projeto
 
 ```
