@@ -1,5 +1,6 @@
 package com.prostock.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -37,5 +39,19 @@ public class GlobalExceptionHandler {
                 .toList();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of(400, "Dados inválidos", "Verifique os campos enviados", detalhes));
+    }
+
+    /**
+     * Rede de segurança: qualquer exceção não tratada acima (ex.: falha de
+     * infraestrutura, bug não previsto) cai aqui em vez de vazar para a
+     * página de erro padrão do Spring. O detalhe técnico vai só pro log do
+     * servidor — o cliente recebe uma mensagem genérica, no mesmo formato
+     * usado pelos demais erros da API.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenerico(Exception ex) {
+        log.error("Erro não tratado", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.of(500, "Erro interno", "Ocorreu um erro inesperado. Tente novamente."));
     }
 }
