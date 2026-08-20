@@ -32,4 +32,17 @@ public interface MovimentacaoRepository extends JpaRepository<Movimentacao, Long
         ORDER BY m.dataHora DESC
         """)
     List<Movimentacao> findByTipoDesde(@Param("tipo") TipoMovimentacao tipo, @Param("desde") LocalDateTime desde);
+
+    /**
+     * UC03: soma as movimentações de um produto e tipo dentro de um período
+     * fechado (usado no relatório gerencial de valor em estoque e giro).
+     */
+    @Query("""
+        SELECT COALESCE(SUM(m.quantidade), 0) FROM Movimentacao m
+        WHERE m.produto.id = :produtoId
+        AND m.tipo = :tipo
+        AND m.dataHora BETWEEN :inicio AND :fim
+        """)
+    Long somarPorProdutoTipoEPeriodo(@Param("produtoId") Long produtoId, @Param("tipo") TipoMovimentacao tipo,
+                                      @Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);
 }
