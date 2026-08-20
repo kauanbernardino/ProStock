@@ -43,7 +43,9 @@ function renderizar(fornecedores) {
             <td><span class="badge ${f.ativo ? "badge-normal" : "badge-ruptura"}">${f.ativo ? "Ativo" : "Inativo"}</span></td>
             <td style="${ehAdmin ? "" : "display:none;"}">
                 <button class="btn btn-secundario btn-pequeno" data-editar="${f.id}">Editar</button>
-                <button class="btn btn-perigo btn-pequeno" data-inativar="${f.id}">Inativar</button>
+                ${f.ativo
+                    ? `<button class="btn btn-perigo btn-pequeno" data-inativar="${f.id}">Inativar</button>`
+                    : `<button class="btn btn-secundario btn-pequeno" data-reativar="${f.id}">Reativar</button>`}
             </td>
         `;
         corpo.appendChild(linha);
@@ -54,6 +56,9 @@ function renderizar(fornecedores) {
     );
     corpo.querySelectorAll("[data-inativar]").forEach((btn) =>
         btn.addEventListener("click", () => inativar(Number(btn.dataset.inativar)))
+    );
+    corpo.querySelectorAll("[data-reativar]").forEach((btn) =>
+        btn.addEventListener("click", () => reativar(Number(btn.dataset.reativar)))
     );
 }
 
@@ -115,6 +120,15 @@ async function inativar(id) {
     if (!confirm("Inativar este fornecedor?")) return;
     try {
         await api.delete(`/api/fornecedores/${id}`);
+        await carregarFornecedores();
+    } catch (erro) {
+        exibirMensagem("mensagem", erro.message);
+    }
+}
+
+async function reativar(id) {
+    try {
+        await api.patch(`/api/fornecedores/${id}/reativar`);
         await carregarFornecedores();
     } catch (erro) {
         exibirMensagem("mensagem", erro.message);

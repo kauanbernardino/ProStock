@@ -43,4 +43,10 @@ public class FornecedorController {
     public void inativar(@PathVariable Long id) {
         fornecedorService.inativar(id);
     }
+
+    @PatchMapping("/{id}/reativar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void reativar(@PathVariable Long id) {
+        fornecedorService.reativar(id);
+    }
 }

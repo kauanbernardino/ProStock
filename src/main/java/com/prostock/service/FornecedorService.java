@@ -60,4 +60,10 @@ public class FornecedorService {
         fornecedor.setAtivo(false);
         fornecedorRepository.save(fornecedor);
     }
+
+    public void reativar(Long id) {
+        Fornecedor fornecedor = buscarPorId(id);
+        fornecedor.setAtivo(true);
+        fornecedorRepository.save(fornecedor);
+    }
 }

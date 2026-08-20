@@ -17,9 +17,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -90,5 +92,21 @@ class FornecedorControllerTest {
     void inativar_comUsuarioAdministrador_deveRetornar204() throws Exception {
         mockMvc.perform(delete("/api/fornecedores/1").with(csrf()))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void reativar_comUsuarioAdministrador_deveRetornar204() throws Exception {
+        mockMvc.perform(patch("/api/fornecedores/1/reativar").with(csrf()))
+                .andExpect(status().isNoContent());
+
+        verify(fornecedorService).reativar(1L);
+    }
+
+    @Test
+    @WithMockUser(roles = "FUNCIONARIO")
+    void reativar_comUsuarioFuncionario_deveRetornar403() throws Exception {
+        mockMvc.perform(patch("/api/fornecedores/1/reativar").with(csrf()))
+                .andExpect(status().isForbidden());
     }
 }

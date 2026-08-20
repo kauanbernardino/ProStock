@@ -90,7 +90,7 @@ public class SecurityConfig {
                         ).hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/produtos/**", "/api/categorias/**", "/api/fornecedores/**")
                                 .hasRole("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.PATCH, "/api/produtos/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/produtos/**", "/api/fornecedores/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/produtos/**", "/api/categorias/**",
                                 "/api/fornecedores/**", "/api/motivos/**"
                         ).hasRole("ADMINISTRADOR")
