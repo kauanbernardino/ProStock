@@ -1,9 +1,3 @@
-const ROTULOS_FORMA_PAGAMENTO = {
-    DINHEIRO: "Dinheiro",
-    PIX: "Pix",
-    CARTAO: "Cartão",
-};
-
 let usuarioAtual = null;
 
 (async function () {

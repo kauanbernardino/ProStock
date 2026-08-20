@@ -173,12 +173,6 @@ function renderizarCarrinho() {
     document.getElementById("total-venda").textContent = formatarMoeda(total);
 }
 
-const ROTULOS_FORMA_PAGAMENTO = {
-    DINHEIRO: "Dinheiro",
-    PIX: "Pix",
-    CARTAO: "Cartão",
-};
-
 async function finalizarVenda() {
     exibirMensagem("mensagem", "");
     const formaPagamento = document.querySelector('input[name="forma-pagamento"]:checked').value;
@@ -266,12 +260,4 @@ async function copiarPix() {
     } catch (erro) {
         exibirMensagem("mensagem", "Não foi possível copiar automaticamente. Selecione o código manualmente.");
     }
-}
-
-function debounce(fn, atraso) {
-    let temporizador;
-    return (...args) => {
-        clearTimeout(temporizador);
-        temporizador = setTimeout(() => fn(...args), atraso);
-    };
 }

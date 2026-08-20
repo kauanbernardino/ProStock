@@ -265,11 +265,3 @@ async function removerImagemProduto(imagemId) {
         exibirMensagem("mensagem-imagem", erro.message);
     }
 }
-
-function debounce(fn, atraso) {
-    let temporizador;
-    return (...args) => {
-        clearTimeout(temporizador);
-        temporizador = setTimeout(() => fn(...args), atraso);
-    };
-}

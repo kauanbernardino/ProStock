@@ -41,9 +41,6 @@ spring:
         format_sql: true
         default_schema: prostock
 
-  thymeleaf:
-    cache: false
-
 logging:
   level:
     com.prostock: DEBUG

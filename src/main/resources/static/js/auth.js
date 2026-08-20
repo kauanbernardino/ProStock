@@ -70,6 +70,20 @@ function badgeStatusEstoque(status) {
     return `<span class="badge ${classe}">${texto}</span>`;
 }
 
+function debounce(fn, atraso) {
+    let temporizador;
+    return (...args) => {
+        clearTimeout(temporizador);
+        temporizador = setTimeout(() => fn(...args), atraso);
+    };
+}
+
+const ROTULOS_FORMA_PAGAMENTO = {
+    DINHEIRO: "Dinheiro",
+    PIX: "Pix",
+    CARTAO: "Cartão",
+};
+
 function escaparHtml(texto) {
     const div = document.createElement("div");
     div.textContent = texto === null || texto === undefined ? "" : String(texto);
