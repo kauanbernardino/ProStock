@@ -6,6 +6,7 @@ let usuarioAtual = null;
 let produtoEmEdicao = null;
 let paginaAtual = 0;
 let totalPaginas = 1;
+let mostrandoInativos = false;
 
 (async function () {
     usuarioAtual = await protegerPagina();
@@ -24,6 +25,15 @@ let totalPaginas = 1;
     document.getElementById("input-nova-imagem").addEventListener("change", enviarNovaImagem);
     document.getElementById("btn-pagina-anterior").addEventListener("click", () => mudarPagina(-1));
     document.getElementById("btn-pagina-proxima").addEventListener("click", () => mudarPagina(1));
+
+    const chkInativos = document.getElementById("chk-mostrar-inativos");
+    if (chkInativos) {
+        chkInativos.addEventListener("change", () => {
+            mostrandoInativos = chkInativos.checked;
+            paginaAtual = 0;
+            carregarProdutos();
+        });
+    }
 })();
 
 async function carregarCategorias() {
@@ -40,6 +50,14 @@ async function carregarFornecedores() {
 
 async function carregarProdutos() {
     try {
+        if (mostrandoInativos) {
+            const produtos = await api.get("/api/produtos/inativos");
+            renderizarProdutos(produtos);
+            document.getElementById("paginacao").style.display = "none";
+            return;
+        }
+
+        document.getElementById("paginacao").style.display = "flex";
         const nome = document.getElementById("campo-busca").value.trim();
         const parametros = new URLSearchParams({ pagina: paginaAtual, tamanho: TAMANHO_PAGINA });
         if (nome) parametros.set("nome", nome);
@@ -100,10 +118,12 @@ function renderizarProdutos(produtos) {
             <td>${escaparHtml(p.fornecedorNome)}</td>
             <td>${formatarMoeda(p.preco)}</td>
             <td>${p.quantidadeAtual}</td>
-            <td>${badgeStatusEstoque(p.statusEstoque)}</td>
+            <td>${mostrandoInativos ? '<span class="badge badge-ruptura">Inativo</span>' : badgeStatusEstoque(p.statusEstoque)}</td>
             <td style="${ehAdmin ? "" : "display:none;"}">
-                <button class="btn btn-secundario btn-pequeno" data-editar="${p.id}">Editar</button>
-                <button class="btn btn-perigo btn-pequeno" data-remover="${p.id}">Remover</button>
+                ${mostrandoInativos
+                    ? `<button class="btn btn-secundario btn-pequeno" data-reativar="${p.id}">Reativar</button>`
+                    : `<button class="btn btn-secundario btn-pequeno" data-editar="${p.id}">Editar</button>
+                       <button class="btn btn-perigo btn-pequeno" data-remover="${p.id}">Remover</button>`}
             </td>
         `;
         corpo.appendChild(linha);
@@ -114,6 +134,9 @@ function renderizarProdutos(produtos) {
     );
     corpo.querySelectorAll("[data-remover]").forEach((btn) =>
         btn.addEventListener("click", () => removerProduto(Number(btn.dataset.remover)))
+    );
+    corpo.querySelectorAll("[data-reativar]").forEach((btn) =>
+        btn.addEventListener("click", () => reativarProduto(Number(btn.dataset.reativar)))
     );
 }
 
@@ -195,6 +218,15 @@ async function removerProduto(id) {
     if (!confirm("Remover este produto do estoque ativo?")) return;
     try {
         await api.delete(`/api/produtos/${id}`);
+        await carregarProdutos();
+    } catch (erro) {
+        exibirMensagem("mensagem", erro.message);
+    }
+}
+
+async function reativarProduto(id) {
+    try {
+        await api.patch(`/api/produtos/${id}/reativar`);
         await carregarProdutos();
     } catch (erro) {
         exibirMensagem("mensagem", erro.message);

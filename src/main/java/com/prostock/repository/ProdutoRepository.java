@@ -25,6 +25,8 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
     List<Produto> findByAtivoTrue();
 
+    List<Produto> findByAtivoFalse();
+
     Page<Produto> findByAtivoTrue(Pageable pageable);
 
     Page<Produto> findByNomeContainingIgnoreCaseAndAtivoTrue(String nome, Pageable pageable);

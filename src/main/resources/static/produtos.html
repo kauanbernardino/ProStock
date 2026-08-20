@@ -50,7 +50,13 @@
         <div class="card">
             <div class="barra-acoes">
                 <input type="search" id="campo-busca" class="busca" placeholder="Buscar por nome...">
-                <button class="btn somente-admin" id="btn-novo-produto">+ Novo produto</button>
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <label class="somente-admin" style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:500; margin:0; cursor:pointer;">
+                        <input type="checkbox" id="chk-mostrar-inativos" style="width:auto;">
+                        Ver inativos
+                    </label>
+                    <button class="btn somente-admin" id="btn-novo-produto">+ Novo produto</button>
+                </div>
             </div>
 
             <div class="tabela-scroll">

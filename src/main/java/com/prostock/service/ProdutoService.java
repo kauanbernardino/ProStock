@@ -150,6 +150,22 @@ public class ProdutoService {
         produtoRepository.save(produto);
     }
 
+    @Transactional(readOnly = true)
+    public List<Produto> listarInativos() {
+        return produtoRepository.findByAtivoFalse();
+    }
+
+    /**
+     * Reverte a inativação. Necessário porque o SKU é único no banco mesmo
+     * para produtos inativos — sem isso, um produto "removido" trava o SKU
+     * pra sempre e não há como recadastrar a mesma peça.
+     */
+    public Produto reativar(Long id) {
+        Produto produto = buscarPorId(id);
+        produto.setAtivo(true);
+        return produtoRepository.save(produto);
+    }
+
     /**
      * Fotos do produto: usadas pelo vendedor para conferir visualmente a peça
      * quando o cliente a traz em mãos sem saber o veículo/ano exato.

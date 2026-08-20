@@ -22,9 +22,11 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -130,5 +132,38 @@ class ProdutoControllerTest {
 
         mockMvc.perform(get("/api/produtos/999"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void listarInativos_comUsuarioAdministrador_deveRetornarProdutosInativos() throws Exception {
+        Produto inativo = produtoExemplo();
+        inativo.setAtivo(false);
+        when(produtoService.listarInativos()).thenReturn(List.of(inativo));
+
+        mockMvc.perform(get("/api/produtos/inativos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].sku").value("PF-001"))
+                .andExpect(jsonPath("$[0].ativo").value(false));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void reativar_comUsuarioAdministrador_deveRetornar200() throws Exception {
+        Produto reativado = produtoExemplo();
+        when(produtoService.reativar(10L)).thenReturn(reativado);
+
+        mockMvc.perform(patch("/api/produtos/10/reativar").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ativo").value(true));
+
+        verify(produtoService).reativar(10L);
+    }
+
+    @Test
+    @WithMockUser(roles = "FUNCIONARIO")
+    void reativar_comUsuarioFuncionario_deveRetornar403() throws Exception {
+        mockMvc.perform(patch("/api/produtos/10/reativar").with(csrf()))
+                .andExpect(status().isForbidden());
     }
 }

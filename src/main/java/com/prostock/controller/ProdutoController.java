@@ -82,6 +82,16 @@ public class ProdutoController {
         produtoService.inativar(id);
     }
 
+    @GetMapping("/inativos")
+    public List<ProdutoResponse> listarInativos() {
+        return produtoService.listarInativos().stream().map(ProdutoResponse::from).toList();
+    }
+
+    @PatchMapping("/{id}/reativar")
+    public ProdutoResponse reativar(@PathVariable Long id) {
+        return ProdutoResponse.from(produtoService.reativar(id));
+    }
+
     @PostMapping(value = "/{id}/imagens", consumes = "multipart/form-data")
     @ResponseStatus(HttpStatus.CREATED)
     public ProdutoResponse adicionarImagem(@PathVariable Long id, @RequestParam("arquivo") MultipartFile arquivo) {
