@@ -511,6 +511,43 @@ input:focus, select:focus, textarea:focus {
     display: inline-block;
 }
 
+/* ---------- Relatórios (giro de peças) ---------- */
+
+.sku-tabela {
+    color: var(--cor-texto-suave);
+    font-size: 12px;
+}
+
+.giro-celula {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 140px;
+}
+
+.giro-barra {
+    flex: 1;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--cor-borda);
+    overflow: hidden;
+}
+
+.giro-barra > span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+}
+
+.giro-alto > .giro-barra > span { background: var(--cor-sucesso); }
+.giro-medio > .giro-barra > span { background: var(--cor-alerta); }
+.giro-baixo > .giro-barra > span { background: var(--cor-perigo); }
+
+.giro-pct { font-weight: 700; font-size: 12.5px; min-width: 34px; text-align: right; }
+.giro-alto .giro-pct { color: var(--cor-sucesso); }
+.giro-medio .giro-pct { color: var(--cor-alerta); }
+.giro-baixo .giro-pct { color: var(--cor-perigo); }
+
 @media (max-width: 860px) {
     .app {
         grid-template-columns: 1fr;
