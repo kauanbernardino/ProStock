@@ -33,7 +33,7 @@
             </button>
             <div>
                 <h1>Histórico de vendas</h1>
-                <div class="subtitulo">Consulte, reimprima ou cancele vendas já registradas</div>
+                <div class="subtitulo">Clique em uma venda para ver os itens, reimprimir ou cancelar</div>
             </div>
             <div class="usuario-info">
                 <div>
@@ -67,6 +67,44 @@
             <div id="vazio-vendas" class="vazio" style="display:none;">Nenhuma venda registrada ainda.</div>
         </div>
     </main>
+</div>
+
+<div class="modal-fundo" id="modal-venda">
+    <div class="modal modal-largo" role="dialog" aria-modal="true" aria-labelledby="venda-titulo">
+        <div class="detalhe-cabecalho">
+            <div>
+                <h2 id="venda-titulo"></h2>
+                <div class="subtitulo" id="venda-subtitulo"></div>
+            </div>
+            <button type="button" class="btn-fechar" data-fechar aria-label="Fechar">&times;</button>
+        </div>
+        <div id="venda-cancelamento" class="mensagem mensagem-erro" style="display:none;"></div>
+        <div class="tabela-scroll">
+            <table>
+                <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>SKU</th>
+                    <th>Qtd.</th>
+                    <th>Preço unit.</th>
+                    <th>Subtotal</th>
+                </tr>
+                </thead>
+                <tbody id="venda-itens"></tbody>
+            </table>
+        </div>
+        <div class="total-venda" id="venda-total"></div>
+        <div id="venda-pix" style="display:none;">
+            <h3 style="font-size:14px;">Pix copia e cola</h3>
+            <div class="codigo-pix" id="venda-pix-codigo"></div>
+        </div>
+        <div id="mensagem-venda" class="mensagem mensagem-erro" style="display:none; margin-top:14px;"></div>
+        <div class="modal-acoes">
+            <button type="button" class="btn btn-secundario" data-fechar>Fechar</button>
+            <button type="button" class="btn btn-secundario" id="btn-venda-reimprimir">Reimprimir</button>
+            <button type="button" class="btn btn-perigo" id="btn-venda-cancelar">Cancelar venda</button>
+        </div>
+    </div>
 </div>
 
 <script src="/js/api.js"></script>

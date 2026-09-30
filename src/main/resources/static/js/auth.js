@@ -113,6 +113,51 @@ function escaparHtml(texto) {
     return div.innerHTML;
 }
 
+/**
+ * Janelas de consulta (detalhes): fecham pelo botão com [data-fechar], clicando
+ * no fundo escuro ou com a tecla Esc (só a janela aberta por cima de todas).
+ */
+function abrirJanela(id) {
+    document.getElementById(id).classList.add("aberto");
+}
+
+function fecharJanela(id) {
+    document.getElementById(id).classList.remove("aberto");
+}
+
+function configurarJanela(id) {
+    const fundo = document.getElementById(id);
+    fundo.dataset.consulta = "sim";
+    fundo.addEventListener("click", (evento) => {
+        if (evento.target === fundo || evento.target.closest("[data-fechar]")) {
+            fecharJanela(id);
+        }
+    });
+}
+
+document.addEventListener("keydown", (evento) => {
+    if (evento.key !== "Escape") return;
+    const abertas = [...document.querySelectorAll(".modal-fundo.aberto[data-consulta]")];
+    if (!abertas.length) return;
+    const doTopo = abertas.reduce((a, b) =>
+        Number(getComputedStyle(b).zIndex) >= Number(getComputedStyle(a).zIndex) ? b : a);
+    doTopo.classList.remove("aberto");
+});
+
+/** Deixa a linha da tabela clicável também pelo teclado (Tab + Enter). */
+function tornarLinhaClicavel(linha, aoAbrir) {
+    linha.classList.add("linha-clicavel");
+    linha.tabIndex = 0;
+    linha.addEventListener("click", (evento) => {
+        // Botões da coluna Ações continuam fazendo só o que fazem.
+        if (evento.target.closest("button, a, input")) return;
+        aoAbrir();
+    });
+    linha.addEventListener("keydown", (evento) => {
+        if (evento.key === "Enter" && evento.target === linha) aoAbrir();
+    });
+}
+
 function exibirMensagem(elementoId, texto, tipo = "erro") {
     const el = document.getElementById(elementoId);
     if (!el) return;

@@ -25,6 +25,8 @@ let mostrandoInativos = false;
     document.getElementById("input-nova-imagem").addEventListener("change", enviarNovaImagem);
     document.getElementById("btn-pagina-anterior").addEventListener("click", () => mudarPagina(-1));
     document.getElementById("btn-pagina-proxima").addEventListener("click", () => mudarPagina(1));
+    configurarJanela("modal-detalhes");
+    configurarJanela("modal-foto");
 
     const chkInativos = document.getElementById("chk-mostrar-inativos");
     if (chkInativos) {
@@ -107,9 +109,11 @@ function renderizarProdutos(produtos) {
 
     for (const p of produtos) {
         const foto = p.imagens && p.imagens.length
-            ? `<img src="${escaparHtml(p.imagens[0].url)}" alt="${escaparHtml(p.nome)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">`
-            : `<div style="width:40px;height:40px;border-radius:6px;background:#f1f5f9;"></div>`;
+            ? `<img src="${escaparHtml(p.imagens[0].url)}" alt="${escaparHtml(p.nome)}" class="foto-tabela">`
+            : `<div class="foto-tabela-vazia"></div>`;
         const linha = document.createElement("tr");
+        linha.title = "Clique para ver detalhes e fotos";
+        tornarLinhaClicavel(linha, () => abrirDetalhes(p));
         linha.innerHTML = `
             <td>${foto}</td>
             <td>${escaparHtml(p.sku)}</td>
@@ -254,6 +258,77 @@ async function reativarProduto(id) {
     }
 }
 
+// ---------- Detalhes do produto (consulta, para qualquer perfil) ----------
+
+function abrirDetalhes(produto) {
+    document.getElementById("detalhes-titulo").textContent = produto.nome;
+    document.getElementById("detalhes-subtitulo").textContent = `SKU ${produto.sku}`;
+
+    renderizarFotosDetalhes(produto.imagens || [], produto.nome);
+
+    const status = mostrandoInativos
+        ? '<span class="badge badge-ruptura">Inativo</span>'
+        : badgeStatusEstoque(produto.statusEstoque);
+    const campos = [
+        ["Status", status],
+        ["Em estoque", `${produto.quantidadeAtual} un.`],
+        ["Mínimo / máximo", `${produto.estoqueMinimo} / ${produto.estoqueMaximo}`],
+        ["Preço", formatarMoeda(produto.preco)],
+        ["Categoria", escaparHtml(produto.categoriaNome)],
+        ["Fornecedor", escaparHtml(produto.fornecedorNome)],
+        ["Localização", escaparHtml(produto.localizacaoFisica || "-")],
+        ["Descrição / aplicação", escaparHtml(produto.descricao || "-")],
+    ];
+    document.getElementById("detalhes-info").innerHTML = campos
+        .map(([rotulo, valor]) => `<dt>${rotulo}</dt><dd>${valor}</dd>`)
+        .join("");
+
+    const btnEditar = document.getElementById("btn-detalhes-editar");
+    const podeEditar = usuarioAtual.cargo === "ADMINISTRADOR" && !mostrandoInativos;
+    btnEditar.style.display = podeEditar ? "" : "none";
+    btnEditar.onclick = () => {
+        fecharJanela("modal-detalhes");
+        abrirModal(produto.id, [produto]);
+    };
+
+    abrirJanela("modal-detalhes");
+}
+
+function renderizarFotosDetalhes(imagens, nome) {
+    const area = document.getElementById("detalhes-fotos");
+    if (!imagens.length) {
+        area.innerHTML = '<div class="foto-vazia">Sem fotos cadastradas</div>';
+        return;
+    }
+
+    area.innerHTML = `
+        <img class="foto-principal" id="detalhes-foto-principal" src="${escaparHtml(imagens[0].url)}"
+             alt="${escaparHtml(nome)}" title="Clique para ampliar">
+        ${imagens.length > 1 ? `<div class="miniaturas">${imagens
+            .map((img, i) => `
+                <button type="button" data-indice="${i}" class="${i === 0 ? "ativa" : ""}" aria-label="Foto ${i + 1}">
+                    <img src="${escaparHtml(img.url)}" alt="">
+                </button>`)
+            .join("")}</div>` : ""}
+    `;
+
+    const principal = document.getElementById("detalhes-foto-principal");
+    principal.addEventListener("click", () => ampliarFoto(principal.src, nome));
+    area.querySelectorAll("[data-indice]").forEach((btn) =>
+        btn.addEventListener("click", () => {
+            principal.src = imagens[Number(btn.dataset.indice)].url;
+            area.querySelectorAll("[data-indice]").forEach((b) => b.classList.toggle("ativa", b === btn));
+        })
+    );
+}
+
+function ampliarFoto(url, nome) {
+    const foto = document.getElementById("foto-ampliada");
+    foto.src = url;
+    foto.alt = nome;
+    abrirJanela("modal-foto");
+}
+
 // ---------- Fotos do produto ----------
 
 function renderizarGaleria(imagens) {
@@ -266,7 +341,7 @@ function renderizarGaleria(imagens) {
         .map(
             (img) => `
         <div style="position:relative;">
-            <img src="${escaparHtml(img.url)}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--cor-borda);">
+            <img src="${escaparHtml(img.url)}" data-ampliar title="Clique para ampliar" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--cor-borda);cursor:zoom-in;">
             <button type="button" data-remover-imagem="${img.id}"
                 style="position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; border:none; background:var(--cor-perigo); color:#fff; font-size:12px; cursor:pointer; line-height:1;">
                 &times;
@@ -276,6 +351,9 @@ function renderizarGaleria(imagens) {
         )
         .join("");
 
+    galeria.querySelectorAll("[data-ampliar]").forEach((img) =>
+        img.addEventListener("click", () => ampliarFoto(img.src, produtoEmEdicao ? produtoEmEdicao.nome : ""))
+    );
     galeria.querySelectorAll("[data-remover-imagem]").forEach((btn) =>
         btn.addEventListener("click", () => removerImagemProduto(Number(btn.dataset.removerImagem)))
     );

@@ -88,7 +88,7 @@ class MovimentacaoControllerTest {
     @Test
     void registrar_comDadosValidos_deveRetornar201() throws Exception {
         MovimentacaoRequest request = new MovimentacaoRequest(5L, 1L, TipoMovimentacao.ENTRADA, 10, "Reposição");
-        when(movimentacaoService.registrar(any(MovimentacaoRequest.class), any(Usuario.class)))
+        when(movimentacaoService.registrarManual(any(MovimentacaoRequest.class), any(Usuario.class)))
                 .thenReturn(movimentacaoExemplo());
 
         mockMvc.perform(post("/api/movimentacoes")
@@ -104,7 +104,7 @@ class MovimentacaoControllerTest {
     @Test
     void registrar_comEstoqueInsuficienteNaSaida_deveRetornar400() throws Exception {
         MovimentacaoRequest request = new MovimentacaoRequest(5L, 1L, TipoMovimentacao.SAIDA, 999, null);
-        when(movimentacaoService.registrar(any(MovimentacaoRequest.class), any(Usuario.class)))
+        when(movimentacaoService.registrarManual(any(MovimentacaoRequest.class), any(Usuario.class)))
                 .thenThrow(new RegraDeNegocioException("Estoque insuficiente para 'Pastilha de Freio': disponível 18, solicitado 999"));
 
         mockMvc.perform(post("/api/movimentacoes")

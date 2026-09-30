@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +30,34 @@ public class MovimentacaoService {
     private final AlertaService alertaService;
 
     /**
+     * Motivos que só o próprio sistema lança: ESTORNO nasce do cancelamento de
+     * uma venda e AJUSTE_INVENTARIO do UC07 (restrito ao Administrador).
+     */
+    static final Set<String> MOTIVOS_EXCLUSIVOS_DO_SISTEMA = Set.of("ESTORNO", "AJUSTE_INVENTARIO");
+    private static final String MOTIVO_VENDA = "VENDA";
+
+    /**
+     * Movimentação lançada pela tela de Movimentações. Além das regras de
+     * registrar(), barra os motivos exclusivos do sistema. VENDA continua
+     * permitida para regularizar o estoque de uma venda que não foi registrada
+     * na hora (ex.: feita longe do computador), mas só como SAÍDA.
+     */
+    public Movimentacao registrarManual(MovimentacaoRequest request, Usuario usuario) {
+        MotivoMovimentacao motivo = motivoMovimentacaoRepository.findById(request.motivoId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Motivo não encontrado: " + request.motivoId()));
+        String descricao = motivo.getDescricao().toUpperCase();
+
+        if (MOTIVOS_EXCLUSIVOS_DO_SISTEMA.contains(descricao)) {
+            throw new RegraDeNegocioException("O motivo '" + motivo.getDescricao()
+                    + "' é lançado automaticamente pelo sistema e não pode ser usado em uma movimentação manual");
+        }
+        if (MOTIVO_VENDA.equals(descricao) && request.tipo() != TipoMovimentacao.SAIDA) {
+            throw new RegraDeNegocioException("Uma movimentação com o motivo VENDA precisa ser do tipo saída");
+        }
+        return registrar(request, usuario);
+    }
+
+    /**
      * UC02/UC04/UC05: registra entrada, saída, devolução ou avaria como uma
      * movimentação, atualizando a quantidade em estoque do produto e
      * disparando os alertas cabíveis (UC11).
@@ -36,6 +65,9 @@ public class MovimentacaoService {
     public Movimentacao registrar(MovimentacaoRequest request, Usuario usuario) {
         Produto produto = produtoRepository.findById(request.produtoId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado: " + request.produtoId()));
+        if (!produto.isAtivo()) {
+            throw new RegraDeNegocioException("Produto '" + produto.getNome() + "' está inativo; reative-o antes de movimentar o estoque");
+        }
         MotivoMovimentacao motivo = motivoMovimentacaoRepository.findById(request.motivoId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Motivo não encontrado: " + request.motivoId()));
 

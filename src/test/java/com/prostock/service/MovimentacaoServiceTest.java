@@ -109,4 +109,66 @@ class MovimentacaoServiceTest {
         assertThatThrownBy(() -> movimentacaoService.registrar(request, usuario))
                 .isInstanceOf(RecursoNaoEncontradoException.class);
     }
+
+    @Test
+    void produtoInativo_deveLancarRegraDeNegocioENaoAlterarEstoque() {
+        produto.setAtivo(false);
+        MovimentacaoRequest request = new MovimentacaoRequest(1L, 1L, TipoMovimentacao.ENTRADA, 5, null);
+
+        assertThatThrownBy(() -> movimentacaoService.registrar(request, usuario))
+                .isInstanceOf(RegraDeNegocioException.class)
+                .hasMessageContaining("inativo");
+
+        assertThat(produto.getQuantidadeAtual()).isEqualTo(10);
+        verify(movimentacaoRepository, never()).save(any());
+    }
+
+    @Test
+    void registrarManual_vendaComoSaida_devePermitirParaRegularizarVendaNaoRegistrada() {
+        MovimentacaoRequest request = new MovimentacaoRequest(1L, 1L, TipoMovimentacao.SAIDA, 2, "venda na rua");
+
+        movimentacaoService.registrarManual(request, usuario);
+
+        assertThat(produto.getQuantidadeAtual()).isEqualTo(8);
+        verify(movimentacaoRepository).save(any(Movimentacao.class));
+    }
+
+    @Test
+    void registrarManual_vendaComoEntrada_deveLancarRegraDeNegocio() {
+        MovimentacaoRequest request = new MovimentacaoRequest(1L, 1L, TipoMovimentacao.ENTRADA, 2, null);
+
+        assertThatThrownBy(() -> movimentacaoService.registrarManual(request, usuario))
+                .isInstanceOf(RegraDeNegocioException.class)
+                .hasMessageContaining("saída");
+
+        assertThat(produto.getQuantidadeAtual()).isEqualTo(10);
+        verify(movimentacaoRepository, never()).save(any());
+    }
+
+    @Test
+    void registrarManual_comMotivosExclusivosDoSistema_deveLancarRegraDeNegocio() {
+        for (String descricao : MovimentacaoService.MOTIVOS_EXCLUSIVOS_DO_SISTEMA) {
+            MotivoMovimentacao exclusivo = MotivoMovimentacao.builder().id(2L).descricao(descricao).build();
+            when(motivoMovimentacaoRepository.findById(2L)).thenReturn(Optional.of(exclusivo));
+            MovimentacaoRequest request = new MovimentacaoRequest(1L, 2L, TipoMovimentacao.ENTRADA, 3, null);
+
+            assertThatThrownBy(() -> movimentacaoService.registrarManual(request, usuario))
+                    .isInstanceOf(RegraDeNegocioException.class)
+                    .hasMessageContaining("automaticamente pelo sistema");
+        }
+
+        assertThat(produto.getQuantidadeAtual()).isEqualTo(10);
+        verify(movimentacaoRepository, never()).save(any());
+    }
+
+    @Test
+    void registrarManual_comMotivoComum_deveRegistrarNormalmente() {
+        MotivoMovimentacao compra = MotivoMovimentacao.builder().id(3L).descricao("COMPRA").build();
+        when(motivoMovimentacaoRepository.findById(3L)).thenReturn(Optional.of(compra));
+        MovimentacaoRequest request = new MovimentacaoRequest(1L, 3L, TipoMovimentacao.ENTRADA, 5, "NF 123");
+
+        movimentacaoService.registrarManual(request, usuario);
+
+        assertThat(produto.getQuantidadeAtual()).isEqualTo(15);
+    }
 }

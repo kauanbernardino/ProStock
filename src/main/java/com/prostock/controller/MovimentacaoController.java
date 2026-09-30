@@ -25,7 +25,7 @@ public class MovimentacaoController {
     @ResponseStatus(HttpStatus.CREATED)
     public MovimentacaoResponse registrar(@Valid @RequestBody MovimentacaoRequest request,
                                            @AuthenticationPrincipal UsuarioPrincipal principal) {
-        return MovimentacaoResponse.from(movimentacaoService.registrar(request, principal.getUsuario()));
+        return MovimentacaoResponse.from(movimentacaoService.registrarManual(request, principal.getUsuario()));
     }
 
     @GetMapping("/produto/{produtoId}")

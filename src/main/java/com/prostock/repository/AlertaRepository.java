@@ -14,6 +14,8 @@ public interface AlertaRepository extends JpaRepository<Alerta, Long> {
 
     List<Alerta> findByProdutoIdOrderByDataCriacaoDesc(Long produtoId);
 
+    List<Alerta> findByProdutoIdAndLidoFalse(Long produtoId);
+
     Optional<Alerta> findFirstByProdutoIdAndTipoAndLidoFalse(Long produtoId, TipoAlerta tipo);
 
     boolean existsByProdutoIdAndTipoAndLidoFalse(Long produtoId, TipoAlerta tipo);

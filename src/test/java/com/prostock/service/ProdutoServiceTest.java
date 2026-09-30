@@ -264,4 +264,27 @@ class ProdutoServiceTest {
 
         verify(produtoRepository).findAll(any(Specification.class), eq(Sort.by("nome")));
     }
+
+    @Test
+    void inativar_deveEncerrarOsAlertasAbertosDoProduto() {
+        Produto produto = Produto.builder().id(1L).nome("Pastilha").sku("PF-001").ativo(true).build();
+        when(produtoRepository.findById(1L)).thenReturn(Optional.of(produto));
+
+        produtoService.inativar(1L);
+
+        assertThat(produto.isAtivo()).isFalse();
+        verify(alertaService).encerrarAlertasAbertos(produto);
+    }
+
+    @Test
+    void reativar_deveReavaliarOsAlertasDeEstoque() {
+        Produto produto = Produto.builder().id(1L).nome("Pastilha").sku("PF-001").ativo(false).build();
+        when(produtoRepository.findById(1L)).thenReturn(Optional.of(produto));
+        when(produtoRepository.save(produto)).thenReturn(produto);
+
+        produtoService.reativar(1L);
+
+        assertThat(produto.isAtivo()).isTrue();
+        verify(alertaService).avaliarNivelDeEstoque(produto);
+    }
 }

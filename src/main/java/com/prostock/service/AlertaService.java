@@ -82,6 +82,16 @@ public class AlertaService {
         }
     }
 
+    /**
+     * Produto inativado sai do estoque ativo: os alertas abertos dele deixam
+     * de fazer sentido e não devem continuar no painel e na tela de Alertas.
+     */
+    public void encerrarAlertasAbertos(Produto produto) {
+        List<Alerta> abertos = alertaRepository.findByProdutoIdAndLidoFalse(produto.getId());
+        abertos.forEach(alerta -> alerta.setLido(true));
+        alertaRepository.saveAll(abertos);
+    }
+
     private void criarSeNecessario(Produto produto, TipoAlerta tipo, boolean condicao, String mensagem) {
         if (!condicao) {
             return;

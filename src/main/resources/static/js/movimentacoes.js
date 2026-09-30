@@ -16,10 +16,30 @@ async function carregarProdutos() {
         .join("");
 }
 
+// Lançados só pelo sistema: ESTORNO (cancelamento de venda) e AJUSTE_INVENTARIO (UC07).
+const MOTIVOS_EXCLUSIVOS_DO_SISTEMA = ["ESTORNO", "AJUSTE_INVENTARIO"];
+
 async function carregarMotivos() {
-    const motivos = await api.get("/api/motivos");
+    const motivos = (await api.get("/api/motivos"))
+        .filter((m) => !MOTIVOS_EXCLUSIVOS_DO_SISTEMA.includes(m.descricao.toUpperCase()));
     const select = document.getElementById("mov-motivo");
-    select.innerHTML = motivos.map((m) => `<option value="${m.id}">${escaparHtml(m.descricao)}</option>`).join("");
+    select.innerHTML = motivos
+        .map((m) => `<option value="${m.id}" data-descricao="${escaparHtml(m.descricao.toUpperCase())}">${escaparHtml(m.descricao)}</option>`)
+        .join("");
+    select.addEventListener("change", ajustarTipoPeloMotivo);
+    ajustarTipoPeloMotivo();
+}
+
+/**
+ * VENDA manual serve para regularizar o estoque de uma venda não registrada
+ * na hora, então é sempre uma saída.
+ */
+function ajustarTipoPeloMotivo() {
+    const opcao = document.getElementById("mov-motivo").selectedOptions[0];
+    const tipo = document.getElementById("mov-tipo");
+    const ehVenda = opcao && opcao.dataset.descricao === "VENDA";
+    if (ehVenda) tipo.value = "SAIDA";
+    tipo.querySelector('option[value="ENTRADA"]').disabled = ehVenda;
 }
 
 async function carregarHistorico() {
@@ -80,6 +100,7 @@ async function registrarMovimentacao(evento) {
     try {
         await api.post("/api/movimentacoes", corpo);
         document.getElementById("form-movimentacao").reset();
+        ajustarTipoPeloMotivo();
         await Promise.all([carregarProdutos(), carregarHistorico()]);
     } catch (erro) {
         exibirMensagem("mensagem-form", erro.message);

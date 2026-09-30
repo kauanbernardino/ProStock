@@ -50,4 +50,5 @@ spring:
 logging:
   level:
     com.prostock: DEBUG
-    org.hibernate.SQL: DEBUG
+    # Para depurar consultas, troque para DEBUG (imprime todo SQL no console).
+    org.hibernate.SQL: INFO

@@ -197,6 +197,7 @@ public class ProdutoService {
         Produto produto = buscarPorId(id);
         produto.setAtivo(false);
         produtoRepository.save(produto);
+        alertaService.encerrarAlertasAbertos(produto);
     }
 
     @Transactional(readOnly = true)
@@ -212,7 +213,10 @@ public class ProdutoService {
     public Produto reativar(Long id) {
         Produto produto = buscarPorId(id);
         produto.setAtivo(true);
-        return produtoRepository.save(produto);
+        Produto salvo = produtoRepository.save(produto);
+        // Volta a ser acompanhado: se reativou zerado ou abaixo do mínimo, o alerta reaparece.
+        alertaService.avaliarNivelDeEstoque(salvo);
+        return salvo;
     }
 
     /**

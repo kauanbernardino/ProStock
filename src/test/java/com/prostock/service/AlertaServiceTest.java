@@ -219,4 +219,18 @@ class AlertaServiceTest {
         assertThat(captor.getAllValues()).extracting(Alerta::getTipo)
                 .containsExactlyInAnyOrder(TipoAlerta.RUPTURA, TipoAlerta.ESTOQUE_BAIXO);
     }
+
+    @Test
+    void encerrarAlertasAbertos_deveMarcarTodosOsAlertasAbertosDoProdutoComoLidos() {
+        Produto produto = produtoCom(0, 5);
+        Alerta ruptura = Alerta.builder().produto(produto).tipo(TipoAlerta.RUPTURA).lido(false).build();
+        Alerta obsoleto = Alerta.builder().produto(produto).tipo(TipoAlerta.ESTOQUE_OBSOLETO).lido(false).build();
+        when(alertaRepository.findByProdutoIdAndLidoFalse(1L)).thenReturn(List.of(ruptura, obsoleto));
+
+        alertaService.encerrarAlertasAbertos(produto);
+
+        assertThat(ruptura.isLido()).isTrue();
+        assertThat(obsoleto.isLido()).isTrue();
+        verify(alertaRepository).saveAll(List.of(ruptura, obsoleto));
+    }
 }

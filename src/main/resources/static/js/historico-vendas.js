@@ -4,6 +4,7 @@ let usuarioAtual = null;
     usuarioAtual = await protegerPagina();
     if (!usuarioAtual) return;
 
+    configurarJanela("modal-venda");
     await carregarVendas();
 })();
 
@@ -30,6 +31,8 @@ function renderizarVendas(vendas) {
     for (const v of vendas) {
         const cancelada = v.status === "CANCELADA";
         const linha = document.createElement("tr");
+        linha.title = "Clique para ver os itens desta venda";
+        tornarLinhaClicavel(linha, () => abrirDetalhesVenda(v.id));
         linha.innerHTML = `
             <td>${formatarData(v.dataHora)}</td>
             <td>${escaparHtml(v.usuarioNome)}</td>
@@ -38,6 +41,7 @@ function renderizarVendas(vendas) {
             <td>${formatarMoeda(v.valorTotal)}</td>
             <td><span class="badge ${cancelada ? "badge-ruptura" : "badge-normal"}">${cancelada ? "Cancelada" : "Concluída"}</span></td>
             <td>
+                <button type="button" class="btn btn-secundario btn-pequeno" data-detalhes="${v.id}">Ver itens</button>
                 <button type="button" class="btn btn-secundario btn-pequeno" data-reimprimir="${v.id}">Reimprimir</button>
                 ${cancelada ? "" : `<button type="button" class="btn btn-perigo btn-pequeno" data-cancelar="${v.id}">Cancelar</button>`}
             </td>
@@ -45,6 +49,9 @@ function renderizarVendas(vendas) {
         corpo.appendChild(linha);
     }
 
+    corpo.querySelectorAll("[data-detalhes]").forEach((btn) =>
+        btn.addEventListener("click", () => abrirDetalhesVenda(Number(btn.dataset.detalhes)))
+    );
     corpo.querySelectorAll("[data-reimprimir]").forEach((btn) =>
         btn.addEventListener("click", () => reimprimir(Number(btn.dataset.reimprimir)))
     );
@@ -53,13 +60,63 @@ function renderizarVendas(vendas) {
     );
 }
 
-async function cancelarVenda(id) {
-    if (!confirm(`Cancelar a venda #${id}? O estoque dos itens será devolvido automaticamente.`)) return;
+async function abrirDetalhesVenda(id) {
+    try {
+        const venda = await api.get(`/api/vendas/${id}`);
+        renderizarDetalhesVenda(venda);
+        abrirJanela("modal-venda");
+    } catch (erro) {
+        exibirMensagem("mensagem", erro.message);
+    }
+}
+
+function renderizarDetalhesVenda(venda) {
+    const cancelada = venda.status === "CANCELADA";
+    exibirMensagem("mensagem-venda", "");
+
+    document.getElementById("venda-titulo").innerHTML =
+        `Venda #${venda.id} <span class="badge ${cancelada ? "badge-ruptura" : "badge-normal"}">${cancelada ? "Cancelada" : "Concluída"}</span>`;
+    document.getElementById("venda-subtitulo").textContent =
+        `${formatarData(venda.dataHora)} · Vendedor: ${venda.usuarioNome} · Pagamento: ${ROTULOS_FORMA_PAGAMENTO[venda.formaPagamento]}`;
+
+    exibirMensagem("venda-cancelamento", cancelada
+        ? `Cancelada em ${formatarData(venda.canceladaEm)} por ${venda.canceladoPorNome}. O estoque destes itens já foi devolvido.`
+        : "");
+
+    document.getElementById("venda-itens").innerHTML = venda.itens
+        .map((item) => `
+            <tr>
+                <td>${escaparHtml(item.produtoNome)}</td>
+                <td>${escaparHtml(item.produtoSku)}</td>
+                <td>${item.quantidade}</td>
+                <td>${formatarMoeda(item.precoUnitario)}</td>
+                <td>${formatarMoeda(item.subtotal)}</td>
+            </tr>`)
+        .join("");
+    document.getElementById("venda-total").textContent = `Total: ${formatarMoeda(venda.valorTotal)}`;
+
+    const temPix = venda.formaPagamento === "PIX" && venda.pixCopiaECola && !cancelada;
+    document.getElementById("venda-pix").style.display = temPix ? "block" : "none";
+    document.getElementById("venda-pix-codigo").textContent = temPix ? venda.pixCopiaECola : "";
+
+    document.getElementById("btn-venda-reimprimir").onclick = () => abrirJanelaDeImpressao(venda);
+    const btnCancelar = document.getElementById("btn-venda-cancelar");
+    btnCancelar.style.display = cancelada ? "none" : "";
+    btnCancelar.onclick = async () => {
+        const cancelou = await cancelarVenda(venda.id, "mensagem-venda");
+        if (cancelou) await abrirDetalhesVenda(venda.id);
+    };
+}
+
+async function cancelarVenda(id, idMensagem = "mensagem") {
+    if (!confirm(`Cancelar a venda #${id}? O estoque dos itens será devolvido automaticamente.`)) return false;
     try {
         await api.patch(`/api/vendas/${id}/cancelar`);
         await carregarVendas();
+        return true;
     } catch (erro) {
-        exibirMensagem("mensagem", erro.message);
+        exibirMensagem(idMensagem, erro.message);
+        return false;
     }
 }
 
