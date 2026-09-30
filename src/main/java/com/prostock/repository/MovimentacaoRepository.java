@@ -15,8 +15,6 @@ public interface MovimentacaoRepository extends JpaRepository<Movimentacao, Long
 
     List<Movimentacao> findByDataHoraBetweenOrderByDataHoraDesc(LocalDateTime inicio, LocalDateTime fim);
 
-    List<Movimentacao> findByUsuarioIdOrderByDataHoraDesc(Long usuarioId);
-
     boolean existsByMotivoId(Long motivoId);
 
     @Query("""
@@ -26,14 +24,6 @@ public interface MovimentacaoRepository extends JpaRepository<Movimentacao, Long
         AND m.dataHora >= :desde
         """)
     Long somarSaidasDoProdutoDesde(@Param("produtoId") Long produtoId, @Param("desde") LocalDateTime desde);
-
-    @Query("""
-        SELECT m FROM Movimentacao m
-        WHERE m.tipo = :tipo
-        AND m.dataHora >= :desde
-        ORDER BY m.dataHora DESC
-        """)
-    List<Movimentacao> findByTipoDesde(@Param("tipo") TipoMovimentacao tipo, @Param("desde") LocalDateTime desde);
 
     /**
      * UC03: soma as movimentações de um produto e tipo dentro de um período

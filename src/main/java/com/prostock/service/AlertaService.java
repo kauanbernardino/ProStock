@@ -1,5 +1,6 @@
 package com.prostock.service;
 
+import com.prostock.exception.RecursoNaoEncontradoException;
 import com.prostock.model.Alerta;
 import com.prostock.model.Produto;
 import com.prostock.model.enums.TipoAlerta;
@@ -41,7 +42,7 @@ public class AlertaService {
 
     public void marcarComoLido(Long alertaId) {
         Alerta alerta = alertaRepository.findById(alertaId)
-                .orElseThrow(() -> new com.prostock.exception.RecursoNaoEncontradoException("Alerta não encontrado: " + alertaId));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Alerta não encontrado: " + alertaId));
         alerta.setLido(true);
         alertaRepository.save(alerta);
     }

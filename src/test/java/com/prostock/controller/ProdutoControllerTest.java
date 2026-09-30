@@ -57,7 +57,7 @@ class ProdutoControllerTest {
     @MockBean
     private ProdutoService produtoService;
 
-    // SecurityConfig precisa de um CustomUserDetailsService para existir;
+    // A autenticação real usa um CustomUserDetailsService para buscar o usuário;
     // @WithMockUser nao passa por ele, entao um mock vazio basta.
     @MockBean
     private CustomUserDetailsService customUserDetailsService;

@@ -4,6 +4,7 @@ import com.prostock.dto.DashboardResponse;
 import com.prostock.dto.GraficoSemanalResponse;
 import com.prostock.dto.PrevisaoDemandaResponse;
 import com.prostock.dto.SugestaoCompraResponse;
+import com.prostock.exception.RecursoNaoEncontradoException;
 import com.prostock.model.Produto;
 import com.prostock.model.enums.TipoMovimentacao;
 import com.prostock.repository.AlertaRepository;
@@ -94,7 +95,7 @@ public class DashboardService {
      */
     public PrevisaoDemandaResponse previsaoDemanda(Long produtoId) {
         Produto produto = produtoRepository.findById(produtoId)
-                .orElseThrow(() -> new com.prostock.exception.RecursoNaoEncontradoException("Produto não encontrado: " + produtoId));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado: " + produtoId));
 
         LocalDateTime desde = LocalDateTime.now().minusMonths(MESES_PREVISAO_DEMANDA);
         Long totalSaidas = movimentacaoRepository.somarSaidasDoProdutoDesde(produtoId, desde);

@@ -45,8 +45,8 @@ class AuthControllerTest {
     @MockBean
     private AuthenticationManager authenticationManager;
 
-    // SecurityConfig ainda monta um DaoAuthenticationProvider que depende
-    // deste bean, mesmo sem ser usado diretamente nestes testes.
+    // A autenticação real (Spring Security) usa este bean para buscar o
+    // usuário no banco; aqui o AuthenticationManager já é um dublê.
     @MockBean
     private CustomUserDetailsService customUserDetailsService;
 

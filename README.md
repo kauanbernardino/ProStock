@@ -98,6 +98,19 @@ Usuários da demonstração:
 
 Os dados (um arquivo por dia da semana, em `src/main/resources/demo`) e as fotos são gerados por `ferramentas/demo/gerar_dados_demo.py` e `ferramentas/demo/gerar_fotos_demo.py` (Python 3 com `bcrypt` e `Pillow`).
 
+### Rodando a demonstração em outro computador
+
+Os dados e as fotos da demonstração já fazem parte do projeto — não é preciso copiar banco nenhum. O sistema também não depende de internet para rodar.
+
+1. Instale o **JDK 17**, o **PostgreSQL 17** (na instalação, defina a senha do usuário `postgres` como `postgres`) e o **IntelliJ IDEA Community**.
+2. Baixe o projeto (`git clone` ou o ZIP do GitHub) e abra a pasta no IntelliJ.
+3. Rode a configuração **ProStock DEMO (recriar dados)**. Ela cria o banco `prostock_demo`, carrega os dados e copia as fotos.
+4. Acesse **http://localhost:8080** e entre com um dos usuários acima.
+
+Se a senha do `postgres` for outra, informe-a na variável de ambiente `DB_PASSWORD` da configuração de execução (*Edit Configurations… → Environment variables*).
+
+Sem o arquivo `config/application.properties`, o Pix usa a chave de exemplo `00000000000`.
+
 ## Testes
 
 ```bash

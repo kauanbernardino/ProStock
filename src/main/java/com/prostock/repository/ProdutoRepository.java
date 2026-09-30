@@ -20,8 +20,6 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long>, JpaSpec
 
     List<Produto> findByCategoriaIdAndAtivoTrue(Long categoriaId);
 
-    List<Produto> findByFornecedorIdAndAtivoTrue(Long fornecedorId);
-
     List<Produto> findByAtivoTrue();
 
     List<Produto> findByAtivoFalse();
