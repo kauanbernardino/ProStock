@@ -25,6 +25,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
@@ -215,5 +216,21 @@ class VendaControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(vendaService, never()).buscarPorId(any());
+    }
+
+    @Test
+    void finalizar_comConflitoDeConcorrencia_deveRetornar409SemGravarNada() throws Exception {
+        // Simula dois vendedores vendendo a última unidade ao mesmo tempo: o
+        // UPDATE do segundo encontra a versão do produto já alterada.
+        when(vendaService.finalizar(any(VendaRequest.class), any(Usuario.class)))
+                .thenThrow(new ObjectOptimisticLockingFailureException(Produto.class, 5L));
+
+        mockMvc.perform(post("/api/vendas")
+                        .with(csrf())
+                        .with(autenticadoComo(vendedor()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestValido(FormaPagamento.DINHEIRO))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.erro").value("Conflito de atualização"));
     }
 }

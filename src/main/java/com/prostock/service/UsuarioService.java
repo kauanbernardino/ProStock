@@ -7,6 +7,8 @@ import com.prostock.model.Usuario;
 import com.prostock.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.Session;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final FindByIndexNameSessionRepository<? extends Session> sessionRepository;
 
     @Transactional(readOnly = true)
     public List<Usuario> listarTodos() {
@@ -55,19 +58,52 @@ public class UsuarioService {
                 .ifPresent(outro -> {
                     throw new RegraDeNegocioException("Já existe um usuário com o e-mail '" + request.email() + "'");
                 });
+        // O Spring Security guarda cargo e e-mail do usuário dentro da sessão.
+        // Se algum dado de acesso mudar, as sessões abertas precisam cair: senão
+        // um funcionário rebaixado continuaria com permissão de administrador
+        // até fazer logout, e uma senha trocada não derrubaria quem já entrou.
+        String emailAnterior = usuario.getEmail();
+        boolean trocouSenha = request.senha() != null && !request.senha().isBlank();
+        boolean mudouAcesso = usuario.getCargo() != request.cargo()
+                || !emailAnterior.equalsIgnoreCase(request.email())
+                || trocouSenha;
+
         usuario.setNome(request.nome());
         usuario.setEmail(request.email());
         usuario.setCargo(request.cargo());
-        if (request.senha() != null && !request.senha().isBlank()) {
+        if (trocouSenha) {
             usuario.setSenhaHash(passwordEncoder.encode(request.senha()));
         }
-        return usuarioRepository.save(usuario);
+        Usuario salvo = usuarioRepository.save(usuario);
+
+        if (mudouAcesso) {
+            encerrarSessoesDo(emailAnterior);
+        }
+        return salvo;
     }
 
+    /**
+     * Inativa a conta e encerra na hora todas as sessões abertas dela.
+     *
+     * Só marcar ativo=false bloquearia o PRÓXIMO login (isEnabled() em
+     * UsuarioPrincipal), mas uma sessão já aberta continuaria válida até
+     * expirar, porque o Spring Security guarda o usuário autenticado dentro
+     * da sessão. Como as sessões ficam na tabela SPRING_SESSION (Spring
+     * Session JDBC), indexadas pelo e-mail do usuário, dá para apagá-las
+     * direto: a próxima requisição dele já volta 401 e o front manda para
+     * a tela de login.
+     */
     public void inativar(Long id) {
         Usuario usuario = buscarPorId(id);
         usuario.setAtivo(false);
         usuarioRepository.save(usuario);
+        encerrarSessoesDo(usuario.getEmail());
+    }
+
+    private void encerrarSessoesDo(String email) {
+        sessionRepository.findByPrincipalName(email)
+                .keySet()
+                .forEach(sessionRepository::deleteById);
     }
 
     public void reativar(Long id) {

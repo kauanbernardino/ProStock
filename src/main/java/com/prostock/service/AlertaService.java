@@ -18,6 +18,13 @@ import java.util.List;
 public class AlertaService {
 
     private static final int MESES_PARA_OBSOLESCENCIA = 6;
+    /**
+     * Depois que um alerta de obsolescência é gerado (e mesmo que o lojista já
+     * o tenha marcado como lido), o mesmo produto só volta a ser sinalizado
+     * após este intervalo. Sem isso, a verificação diária automática recriaria
+     * o alerta todo dia assim que ele fosse lido.
+     */
+    private static final int DIAS_ENTRE_ALERTAS_DE_OBSOLESCENCIA = 30;
 
     private final AlertaRepository alertaRepository;
     private final ProdutoRepository produtoRepository;
@@ -41,21 +48,37 @@ public class AlertaService {
 
     /**
      * UC11: avalia o nível de estoque de um produto após uma movimentação e
-     * dispara (ou resolve) alertas de ruptura / estoque baixo.
+     * dispara (ou resolve) alertas de ruptura, estoque baixo e excesso.
+     *
+     * Excesso = quantidade ACIMA do estoque máximo. Atingir exatamente o
+     * máximo não é problema (é o teto até onde a sugestão de compra repõe);
+     * ultrapassá-lo significa capital parado além do planejado.
      */
     public void avaliarNivelDeEstoque(Produto produto) {
-        criarSeNecessario(produto, TipoAlerta.RUPTURA, produto.getQuantidadeAtual() <= 0,
+        int quantidade = produto.getQuantidadeAtual();
+
+        criarSeNecessario(produto, TipoAlerta.RUPTURA, quantidade <= 0,
                 "Produto '" + produto.getNome() + "' (SKU " + produto.getSku() + ") está em ruptura de estoque");
 
         criarSeNecessario(produto, TipoAlerta.ESTOQUE_BAIXO,
-                produto.getQuantidadeAtual() > 0 && produto.getQuantidadeAtual() <= produto.getEstoqueMinimo(),
+                quantidade > 0 && quantidade <= produto.getEstoqueMinimo(),
                 "Produto '" + produto.getNome() + "' (SKU " + produto.getSku() + ") atingiu o estoque mínimo");
 
-        if (produto.getQuantidadeAtual() > produto.getEstoqueMinimo()) {
+        criarSeNecessario(produto, TipoAlerta.ESTOQUE_EXCESSO, quantidade > produto.getEstoqueMaximo(),
+                "Produto '" + produto.getNome() + "' (SKU " + produto.getSku() + ") ultrapassou o estoque máximo ("
+                        + quantidade + " de no máximo " + produto.getEstoqueMaximo() + ")");
+
+        // Estoque baixo deixa de valer quando o produto volta acima do mínimo OU
+        // quando zera: aí a situação passou a ser ruptura, que tem alerta próprio.
+        // Sem isso o produto zerado ficava com dois alertas abertos ao mesmo tempo.
+        if (quantidade > produto.getEstoqueMinimo() || quantidade <= 0) {
             resolverAlertasAbertos(produto, TipoAlerta.ESTOQUE_BAIXO);
         }
-        if (produto.getQuantidadeAtual() > 0) {
+        if (quantidade > 0) {
             resolverAlertasAbertos(produto, TipoAlerta.RUPTURA);
+        }
+        if (quantidade <= produto.getEstoqueMaximo()) {
+            resolverAlertasAbertos(produto, TipoAlerta.ESTOQUE_EXCESSO);
         }
     }
 
@@ -85,14 +108,23 @@ public class AlertaService {
     }
 
     /**
-     * UC "Alertar Estoque Obsoleto": produtos sem nenhuma saída registrada
-     * nos últimos meses definidos em MESES_PARA_OBSOLESCENCIA.
+     * UC "Alertar Estoque Obsoleto": produtos ativos, cadastrados há mais de
+     * MESES_PARA_OBSOLESCENCIA meses, sem nenhuma saída nesse período.
+     * Executado automaticamente todo dia (RotinasAgendadas) e também sob
+     * demanda pelo botão "Verificar estoque obsoleto".
      */
     public List<Produto> verificarEstoqueObsoleto() {
-        LocalDateTime limite = LocalDateTime.now().minusMonths(MESES_PARA_OBSOLESCENCIA);
+        LocalDateTime agora = LocalDateTime.now();
+        LocalDateTime limite = agora.minusMonths(MESES_PARA_OBSOLESCENCIA);
+        LocalDateTime janelaSemRepetir = agora.minusDays(DIAS_ENTRE_ALERTAS_DE_OBSOLESCENCIA);
         List<Produto> obsoletos = produtoRepository.findProdutosSemSaidaDesde(limite);
 
         for (Produto produto : obsoletos) {
+            boolean alertadoRecentemente = alertaRepository.existsByProdutoIdAndTipoAndDataCriacaoAfter(
+                    produto.getId(), TipoAlerta.ESTOQUE_OBSOLETO, janelaSemRepetir);
+            if (alertadoRecentemente) {
+                continue;
+            }
             criarSeNecessario(produto, TipoAlerta.ESTOQUE_OBSOLETO, true,
                     "Produto '" + produto.getNome() + "' (SKU " + produto.getSku()
                             + ") está sem movimentação de saída há mais de " + MESES_PARA_OBSOLESCENCIA + " meses");

@@ -65,8 +65,38 @@ admin@prostock.com / admin123
 | `PIX_CHAVE` | `00000000000` | Chave Pix real da loja |
 | `PIX_NOME_RECEBEDOR` | `ProStock Autopecas` | Nome exibido no código Pix gerado |
 | `PIX_CIDADE` | `SAO PAULO` | Cidade exibida no código Pix gerado |
+| `CRON_OBSOLESCENCIA` | `0 0 7 * * *` | Horário da verificação automática de estoque obsoleto |
 
-Antes de usar em produção, configure `PIX_CHAVE`, `PIX_NOME_RECEBEDOR` e `PIX_CIDADE` com os dados reais da loja.
+Os dados reais do Pix **não** ficam no `application.yml` (que vai para o Git). Defina-os como variáveis de ambiente ou crie o arquivo `config/application.properties` na raiz do projeto (ignorado pelo Git), que o Spring Boot carrega automaticamente:
+
+```properties
+app.pix.chave=+5500000000000
+app.pix.nome-recebedor=Nome do Recebedor
+app.pix.cidade=CIDADE
+```
+
+## Atualização de bancos existentes
+
+Alterações de schema feitas depois da primeira versão ficam em `src/main/resources/db/atualizacoes.sql` e são aplicadas automaticamente a cada inicialização (os comandos são idempotentes). Um banco criado com um `schema.sql` antigo não precisa de nenhum passo manual.
+
+## Banco de demonstração
+
+Para apresentar ou testar o sistema com volume real de dados, existe um banco separado (`prostock_demo`) com cerca de 7 meses de operação simulada de uma loja de autopeças: 47 peças com fotos ilustrativas, 8 categorias, 6 fornecedores, 4 usuários, mais de mil vendas (Pix, cartão e dinheiro, incluindo cancelamentos), compras, devoluções, avarias, requisições internas, inventários mensais e alertas. O banco de uso real não é tocado.
+
+No IntelliJ, use a configuração de execução **ProStock DEMO** (ou rode a classe `com.prostock.demo.ProStockDemoApplication`). Na primeira vez o banco é criado e populado sozinho.
+
+**ProStock DEMO (recriar dados)** apaga e gera tudo de novo, com as datas deslocadas para que o último dia simulado seja ontem. Use na véspera de uma apresentação, para o gráfico da semana e a previsão de demanda ficarem atuais.
+
+Usuários da demonstração:
+
+| E-mail | Senha | Cargo |
+|---|---|---|
+| admin@prostock.com | admin123 | Administrador |
+| ana.souza@prostock.com | func123 | Funcionário |
+| joao.pereira@prostock.com | func123 | Funcionário |
+| marcos.lima@prostock.com | func123 | Funcionário (inativo) |
+
+Os dados (um arquivo por dia da semana, em `src/main/resources/demo`) e as fotos são gerados por `ferramentas/demo/gerar_dados_demo.py` e `ferramentas/demo/gerar_fotos_demo.py` (Python 3 com `bcrypt` e `Pillow`).
 
 ## Testes
 

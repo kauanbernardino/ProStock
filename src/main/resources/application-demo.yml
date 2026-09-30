@@ -1,0 +1,8 @@
+# Perfil "demo": ativado por com.prostock.demo.ProStockDemoApplication.
+# Usa um banco separado (prostock_demo) com dados simulados, sem tocar no banco real.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/prostock_demo?currentSchema=prostock
+
+app:
+  upload-dir: ./uploads-demo

@@ -29,7 +29,7 @@ public record ProdutoResponse(
             status = "RUPTURA";
         } else if (produto.getQuantidadeAtual() <= produto.getEstoqueMinimo()) {
             status = "BAIXO";
-        } else if (produto.getQuantidadeAtual() >= produto.getEstoqueMaximo()) {
+        } else if (produto.getQuantidadeAtual() > produto.getEstoqueMaximo()) {
             status = "EXCESSO";
         } else {
             status = "NORMAL";

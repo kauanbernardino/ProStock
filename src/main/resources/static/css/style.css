@@ -485,17 +485,37 @@ input:focus, select:focus, textarea:focus {
 
 /* ---------- Gráfico semanal (SVG simples, sem dependências) ---------- */
 
-.grafico-semanal {
-    width: 100%;
-    height: 220px;
+/* ---------------- Gráfico "Movimentações da semana" ---------------- */
+.grafico-card {
+    --serie-entrada: #2a78d6;
+    --serie-saida: #eb6834;
+    --grade-grafico: #eef1f5;
+}
+
+.grafico-cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.grafico-cabecalho h2 {
+    margin: 0;
+}
+
+.grafico-subtitulo {
+    font-size: 13px;
+    color: var(--cor-texto-suave);
+    margin-top: 2px;
 }
 
 .grafico-legenda {
     display: flex;
-    gap: 20px;
+    gap: 18px;
     font-size: 13px;
     color: var(--cor-texto-suave);
-    margin-top: 8px;
+    padding-top: 4px;
 }
 
 .grafico-legenda span {
@@ -504,12 +524,192 @@ input:focus, select:focus, textarea:focus {
     gap: 6px;
 }
 
-.ponto-legenda {
+.chave-legenda {
     width: 10px;
     height: 10px;
-    border-radius: 50%;
+    border-radius: 2px;
     display: inline-block;
+    flex-shrink: 0;
 }
+
+.chave-entrada { background: var(--serie-entrada); }
+.chave-saida { background: var(--serie-saida); }
+
+.grafico-resumo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin: 16px 0 8px;
+}
+
+.resumo-item {
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    padding: 10px 14px;
+}
+
+.resumo-rotulo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--cor-texto-suave);
+}
+
+.resumo-valor {
+    font-size: 22px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.resumo-detalhe {
+    font-size: 12px;
+    color: var(--cor-texto-suave);
+    margin-top: 2px;
+}
+
+.grafico-area {
+    position: relative;
+}
+
+.grafico-semanal {
+    display: block;
+    width: 100%;
+    height: 260px;
+    overflow: visible;
+}
+
+.grafico-semanal .eixo-texto {
+    font-size: 11px;
+    fill: var(--cor-texto-suave);
+    font-variant-numeric: tabular-nums;
+}
+
+.grafico-semanal .rotulo-dia {
+    font-size: 12px;
+    fill: var(--cor-texto-suave);
+}
+
+.grafico-semanal .rotulo-dia.hoje {
+    fill: var(--cor-texto);
+    font-weight: 600;
+}
+
+.grafico-semanal .valor-coluna {
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--cor-texto);
+    font-variant-numeric: tabular-nums;
+}
+
+.grafico-semanal .sem-movimento {
+    font-size: 11px;
+    fill: #94a3b8;
+}
+
+.grafico-semanal .faixa-dia {
+    fill: var(--cor-texto);
+    opacity: 0;
+    transition: opacity 120ms ease;
+    cursor: default;
+    outline: none;
+}
+
+.grafico-semanal .faixa-dia:hover,
+.grafico-semanal .faixa-dia:focus {
+    opacity: 0.045;
+}
+
+.grafico-semanal .coluna {
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: crescer-coluna 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    transition: filter 120ms ease;
+}
+
+.grafico-semanal .grupo-dia.ativo .coluna {
+    filter: brightness(1.08) saturate(1.1);
+}
+
+.grafico-semanal .valor-coluna {
+    animation: surgir 400ms ease both;
+}
+
+@keyframes crescer-coluna {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+}
+
+@keyframes surgir {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .grafico-semanal .coluna,
+    .grafico-semanal .valor-coluna {
+        animation: none;
+    }
+}
+
+.grafico-tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+    padding: 10px 12px;
+    font-size: 12px;
+    min-width: 190px;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 120ms ease, transform 120ms ease;
+    z-index: 5;
+}
+
+.grafico-tooltip.visivel {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.grafico-tooltip .tooltip-titulo {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--cor-texto);
+}
+
+.grafico-tooltip .tooltip-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    color: var(--cor-texto-suave);
+}
+
+.grafico-tooltip .tooltip-linha strong {
+    color: var(--cor-texto);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+.grafico-tooltip .tooltip-chave {
+    width: 12px;
+    height: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.grafico-tabela {
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+.grafico-tabela summary {
+    cursor: pointer;
+    color: var(--cor-texto-suave);
+}
+
 
 /* ---------- Relatórios (giro de peças) ---------- */
 

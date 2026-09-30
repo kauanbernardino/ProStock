@@ -5,3 +5,7 @@ uploads/
 .env
 *.env
 .claude/
+# Configuração local da loja (dados reais do Pix etc.)
+/config/
+# Fotos copiadas pela aplicação de demonstração
+uploads-demo/

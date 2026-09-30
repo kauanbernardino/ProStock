@@ -1,9 +1,12 @@
 package com.prostock.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -32,6 +35,44 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleCredenciaisInvalidas(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.of(401, "Credenciais inválidas", "E-mail ou senha incorretos"));
+    }
+
+    /**
+     * Login de usuário inativado pelo administrador. Sem este handler a
+     * exceção caía no genérico e a tela mostrava "erro inesperado".
+     */
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErrorResponse> handleUsuarioInativo(DisabledException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of(401, "Usuário inativo",
+                        "Este usuário está inativo. Procure o administrador do sistema."));
+    }
+
+    /**
+     * Dois usuários alteraram o mesmo produto ao mesmo tempo (ex.: duas vendas
+     * da última unidade). A operação que chegou depois foi desfeita por
+     * inteiro; basta tentar de novo, já com o estoque atualizado.
+     */
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handleConflitoDeConcorrencia(OptimisticLockingFailureException ex) {
+        log.warn("Conflito de concorrência: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(409, "Conflito de atualização",
+                        "O estoque foi alterado por outra operação neste mesmo instante. "
+                                + "Nada foi gravado; confira o saldo e tente novamente."));
+    }
+
+    /**
+     * Rede de segurança para restrições do banco (chave estrangeira, UNIQUE,
+     * CHECK) que escaparem das validações dos services: vira 409 com mensagem
+     * clara em vez de 500 genérico.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleIntegridade(DataIntegrityViolationException ex) {
+        log.warn("Violação de integridade: {}", ex.getMostSpecificCause().getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(409, "Operação não permitida",
+                        "O registro está em uso por outros dados do sistema ou viola uma regra do banco."));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

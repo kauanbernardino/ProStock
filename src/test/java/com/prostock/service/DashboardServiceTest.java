@@ -1,10 +1,13 @@
 package com.prostock.service;
 
+import com.prostock.dto.GraficoSemanalResponse;
 import com.prostock.dto.PrevisaoDemandaResponse;
 import com.prostock.dto.SugestaoCompraResponse;
 import com.prostock.model.Categoria;
 import com.prostock.model.Fornecedor;
+import com.prostock.model.Movimentacao;
 import com.prostock.model.Produto;
+import com.prostock.model.enums.TipoMovimentacao;
 import com.prostock.repository.AlertaRepository;
 import com.prostock.repository.MovimentacaoRepository;
 import com.prostock.repository.ProdutoRepository;
@@ -15,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -117,5 +121,29 @@ class DashboardServiceTest {
         List<SugestaoCompraResponse> sugestoes = dashboardService.sugestoesDeCompra();
 
         assertThat(sugestoes.get(0).quantidadeSugerida()).isEqualTo(47);
+    }
+
+    @Test
+    void graficoSemanal_deveSomarPecasEContarMovimentacoesPorDia() {
+        Movimentacao venda1 = Movimentacao.builder().tipo(TipoMovimentacao.SAIDA).quantidade(4).build();
+        Movimentacao venda2 = Movimentacao.builder().tipo(TipoMovimentacao.SAIDA).quantidade(1).build();
+        Movimentacao compra = Movimentacao.builder().tipo(TipoMovimentacao.ENTRADA).quantidade(30).build();
+        when(movimentacaoRepository.findByDataHoraBetweenOrderByDataHoraDesc(any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(List.of());
+        when(movimentacaoRepository.findByDataHoraBetweenOrderByDataHoraDesc(
+                eq(LocalDate.now().atStartOfDay()), any(LocalDateTime.class)))
+                .thenReturn(List.of(venda1, venda2, compra));
+
+        List<GraficoSemanalResponse> semana = dashboardService.graficoSemanal();
+
+        assertThat(semana).hasSize(7);
+        assertThat(semana.get(0).dia()).isEqualTo(LocalDate.now().minusDays(6));
+        GraficoSemanalResponse hoje = semana.get(6);
+        assertThat(hoje.dia()).isEqualTo(LocalDate.now());
+        assertThat(hoje.totalSaidas()).isEqualTo(5);
+        assertThat(hoje.movimentacoesDeSaida()).isEqualTo(2);
+        assertThat(hoje.totalEntradas()).isEqualTo(30);
+        assertThat(hoje.movimentacoesDeEntrada()).isEqualTo(1);
+        assertThat(semana.get(0).totalSaidas()).isZero();
     }
 }

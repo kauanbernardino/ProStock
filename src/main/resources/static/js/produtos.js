@@ -157,8 +157,11 @@ function abrirModal(id, produtosCarregados) {
         document.getElementById("produto-sku").value = produto.sku;
         document.getElementById("produto-descricao").value = produto.descricao || "";
         document.getElementById("produto-preco").value = produto.preco;
+        // UC07: a quantidade pode ser corrigida aqui (contagem física). O backend não
+        // grava o número direto: registra a diferença como movimentação de ajuste.
         document.getElementById("produto-quantidade").value = produto.quantidadeAtual;
-        document.getElementById("produto-quantidade").disabled = true;
+        document.getElementById("produto-quantidade").disabled = false;
+        document.getElementById("dica-ajuste-inventario").style.display = "block";
         document.getElementById("produto-estoque-minimo").value = produto.estoqueMinimo;
         document.getElementById("produto-estoque-maximo").value = produto.estoqueMaximo;
         document.getElementById("produto-categoria").value = produto.categoriaId;
@@ -169,6 +172,7 @@ function abrirModal(id, produtosCarregados) {
         renderizarGaleria(produto.imagens || []);
     } else {
         document.getElementById("produto-quantidade").disabled = false;
+        document.getElementById("dica-ajuste-inventario").style.display = "none";
         document.getElementById("secao-extras").style.display = "none";
     }
 
@@ -200,6 +204,23 @@ async function salvarProduto(evento) {
     try {
         if (id) {
             await api.put(`/api/produtos/${id}`, corpo);
+
+            // UC07: se a quantidade digitada difere do saldo do sistema, registra o ajuste
+            // de inventário (a edição do cadastro, por regra, nunca altera o estoque).
+            const quantidadeContada = corpo.quantidadeAtual;
+            if (produtoEmEdicao && quantidadeContada !== produtoEmEdicao.quantidadeAtual) {
+                try {
+                    await api.patch(`/api/produtos/${id}/ajuste-inventario`, {
+                        quantidade: quantidadeContada,
+                        observacao: "Contagem física pela tela de Produtos",
+                    });
+                } catch (erroAjuste) {
+                    await carregarProdutos();
+                    exibirMensagem("mensagem-modal",
+                        `Os dados do produto foram salvos, mas o ajuste de quantidade falhou: ${erroAjuste.message}`);
+                    return;
+                }
+            }
             fecharModal();
         } else {
             const criado = await api.post("/api/produtos", corpo);

@@ -19,6 +19,7 @@ async function carregarAlertas() {
 const rotulosTipo = {
     RUPTURA: ["Ruptura de estoque", "badge-ruptura"],
     ESTOQUE_BAIXO: ["Estoque baixo", "badge-baixo"],
+    ESTOQUE_EXCESSO: ["Excesso de estoque", "badge-excesso"],
     ESTOQUE_OBSOLETO: ["Estoque obsoleto", "badge-excesso"],
 };
 

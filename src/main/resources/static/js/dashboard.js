@@ -110,6 +110,7 @@ function preencherKpis(resumo) {
     document.getElementById("kpi-total-produtos").textContent = resumo.totalProdutos;
     document.getElementById("kpi-abaixo-minimo").textContent = resumo.produtosAbaixoDoMinimo;
     document.getElementById("kpi-ruptura").textContent = resumo.produtosEmRuptura;
+    document.getElementById("kpi-acima-maximo").textContent = resumo.produtosAcimaDoMaximo;
     document.getElementById("kpi-alertas").textContent = resumo.alertasNaoLidos;
 }
 
@@ -139,35 +140,256 @@ function preencherSugestoes(sugestoes) {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Gráfico "Movimentações da semana": colunas agrupadas (entradas x saídas por
+// dia), eixo com escala, valor no topo de cada coluna, resumo da semana,
+// dica ao passar o mouse (ou focar com Tab) e tabela com os mesmos números.
+// ---------------------------------------------------------------------------
+let dadosGraficoSemanal = [];
+let observadorGrafico = null;
+let primeiraRenderizacao = true;
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const fmtNumero = new Intl.NumberFormat("pt-BR");
+
 function desenharGraficoSemanal(dados) {
+    dadosGraficoSemanal = dados;
+    preencherResumoSemanal(dados);
+    preencherTabelaSemanal(dados);
+    renderizarColunas();
+
+    if (!observadorGrafico && "ResizeObserver" in window) {
+        let largura = 0;
+        observadorGrafico = new ResizeObserver((entradas) => {
+            const nova = Math.round(entradas[0].contentRect.width);
+            if (nova !== largura) {
+                largura = nova;
+                renderizarColunas();
+            }
+        });
+        observadorGrafico.observe(document.getElementById("grafico-area"));
+    }
+}
+
+function dataDoDia(d) {
+    return new Date(d.dia + "T00:00:00");
+}
+
+function rotuloCurto(d) {
+    const data = dataDoDia(d);
+    const semana = data.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
+    return `${semana} ${data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}`;
+}
+
+function rotuloSemana(d) {
+    return dataDoDia(d).toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
+}
+
+function rotuloLongo(d) {
+    const texto = dataDoDia(d).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+function ehHoje(d) {
+    return dataDoDia(d).toDateString() === new Date().toDateString();
+}
+
+function pluralMov(n) {
+    return `${fmtNumero.format(n)} ${n === 1 ? "movimentação" : "movimentações"}`;
+}
+
+function preencherResumoSemanal(dados) {
+    const soma = (campo) => dados.reduce((total, d) => total + d[campo], 0);
+    document.getElementById("resumo-entradas").textContent = `${fmtNumero.format(soma("totalEntradas"))} peças`;
+    document.getElementById("resumo-entradas-mov").textContent = pluralMov(soma("movimentacoesDeEntrada"));
+    document.getElementById("resumo-saidas").textContent = `${fmtNumero.format(soma("totalSaidas"))} peças`;
+    document.getElementById("resumo-saidas-mov").textContent = pluralMov(soma("movimentacoesDeSaida"));
+
+    const pico = dados.reduce((melhor, d) => {
+        const total = d.movimentacoesDeEntrada + d.movimentacoesDeSaida;
+        return !melhor || total > melhor.total ? { d, total } : melhor;
+    }, null);
+    if (pico && pico.total > 0) {
+        document.getElementById("resumo-pico").textContent = rotuloCurto(pico.d);
+        document.getElementById("resumo-pico-detalhe").textContent = pluralMov(pico.total);
+    } else {
+        document.getElementById("resumo-pico").textContent = "—";
+        document.getElementById("resumo-pico-detalhe").textContent = "Nenhuma movimentação na semana";
+    }
+}
+
+function preencherTabelaSemanal(dados) {
+    const corpo = document.getElementById("grafico-tabela-corpo");
+    corpo.replaceChildren();
+    dados.forEach((d) => {
+        const linha = document.createElement("tr");
+        [rotuloLongo(d), d.totalEntradas, d.movimentacoesDeEntrada, d.totalSaidas, d.movimentacoesDeSaida]
+            .forEach((valor) => {
+                const celula = document.createElement("td");
+                celula.textContent = typeof valor === "number" ? fmtNumero.format(valor) : valor;
+                linha.appendChild(celula);
+            });
+        corpo.appendChild(linha);
+    });
+}
+
+/** Escala "bonita": teto e passo redondos (0, 5, 10, 20, 25, 50, 100...). */
+function escalaEixo(maximo) {
+    if (maximo <= 0) return { teto: 4, passo: 1 };
+    const bruto = maximo / 4;
+    const potencia = Math.pow(10, Math.floor(Math.log10(bruto)));
+    const passo = [1, 2, 2.5, 5, 10].map((m) => m * potencia).find((p) => p >= bruto);
+    return { teto: Math.ceil(maximo / passo) * passo, passo };
+}
+
+function el(nome, atributos = {}, texto) {
+    const no = document.createElementNS(SVG_NS, nome);
+    Object.entries(atributos).forEach(([k, v]) => no.setAttribute(k, v));
+    if (texto !== undefined) no.textContent = texto;
+    return no;
+}
+
+/** Coluna com o topo arredondado (4px) e a base reta, apoiada na linha zero. */
+function caminhoColuna(x, y, largura, altura) {
+    const r = Math.min(4, largura / 2, altura);
+    return `M${x},${y + altura} V${y + r} Q${x},${y} ${x + r},${y} H${x + largura - r} ` +
+        `Q${x + largura},${y} ${x + largura},${y + r} V${y + altura} Z`;
+}
+
+function renderizarColunas() {
+    const dados = dadosGraficoSemanal;
     const svg = document.getElementById("grafico-semanal");
-    const largura = 700;
-    const altura = 220;
-    const margemInferior = 30;
-    const alturaUtil = altura - margemInferior;
+    if (!dados.length || !svg) return;
 
-    const maiorValor = Math.max(1, ...dados.flatMap((d) => [d.totalEntradas, d.totalSaidas]));
-    const larguraGrupo = largura / dados.length;
-    const larguraBarra = larguraGrupo / 4;
+    const largura = Math.max(320, svg.getBoundingClientRect().width || 700);
+    const altura = 260;
+    const margem = { topo: 22, direita: 8, base: 34, esquerda: 40 };
+    const larguraUtil = largura - margem.esquerda - margem.direita;
+    const alturaUtil = altura - margem.topo - margem.base;
+    const baseY = margem.topo + alturaUtil;
 
-    let svgConteudo = "";
+    const maior = Math.max(0, ...dados.flatMap((d) => [d.totalEntradas, d.totalSaidas]));
+    const { teto, passo } = escalaEixo(maior);
+    const y = (v) => baseY - (v / teto) * alturaUtil;
 
-    dados.forEach((d, indice) => {
-        const centroGrupo = indice * larguraGrupo + larguraGrupo / 2;
-        const alturaEntrada = (d.totalEntradas / maiorValor) * alturaUtil;
-        const alturaSaida = (d.totalSaidas / maiorValor) * alturaUtil;
+    svg.setAttribute("viewBox", `0 0 ${largura} ${altura}`);
+    svg.replaceChildren();
 
-        const xEntrada = centroGrupo - larguraBarra - 2;
-        const xSaida = centroGrupo + 2;
+    // Grade horizontal e valores do eixo (linhas finas, discretas)
+    for (let v = 0; v <= teto + 1e-9; v += passo) {
+        svg.appendChild(el("line", {
+            x1: margem.esquerda, x2: largura - margem.direita, y1: y(v), y2: y(v),
+            stroke: v === 0 ? "#cbd5e1" : "var(--grade-grafico)", "stroke-width": 1,
+        }));
+        svg.appendChild(el("text", {
+            x: margem.esquerda - 8, y: y(v) + 4, "text-anchor": "end", class: "eixo-texto",
+        }, fmtNumero.format(v)));
+    }
 
-        svgConteudo += `<rect x="${xEntrada}" y="${alturaUtil - alturaEntrada}" width="${larguraBarra}" height="${alturaEntrada}" rx="3" fill="var(--cor-sucesso, #16a34a)"></rect>`;
-        svgConteudo += `<rect x="${xSaida}" y="${alturaUtil - alturaSaida}" width="${larguraBarra}" height="${alturaSaida}" rx="3" fill="var(--cor-perigo, #dc2626)"></rect>`;
+    const larguraFaixa = larguraUtil / dados.length;
+    const larguraColuna = Math.min(24, (larguraFaixa - 16) / 2);
+    const intervalo = 2;
+    const tooltip = document.getElementById("grafico-tooltip");
+    const animar = primeiraRenderizacao;
+    const compacto = larguraFaixa < 64;           // celular: só o dia da semana no eixo
 
-        const rotuloDia = new Date(d.dia + "T00:00:00").toLocaleDateString("pt-BR", { weekday: "short" });
-        svgConteudo += `<text x="${centroGrupo}" y="${altura - 8}" text-anchor="middle" font-size="11" fill="#64748b">${rotuloDia}</text>`;
+    dados.forEach((d, i) => {
+        const x0 = margem.esquerda + i * larguraFaixa;
+        const centro = x0 + larguraFaixa / 2;
+        const grupo = el("g", { class: "grupo-dia" });
+
+        const series = [
+            { valor: d.totalEntradas, cor: "var(--serie-entrada)", x: centro - intervalo / 2 - larguraColuna },
+            { valor: d.totalSaidas, cor: "var(--serie-saida)", x: centro + intervalo / 2 },
+        ];
+
+        series.forEach((s, k) => {
+            if (s.valor <= 0) return;
+            const topo = y(s.valor);
+            const coluna = el("path", {
+                d: caminhoColuna(s.x, topo, larguraColuna, baseY - topo),
+                fill: s.cor, class: "coluna",
+            });
+            const atraso = animar ? `${i * 60 + k * 30}ms` : "0ms";
+            coluna.style.animationDelay = atraso;
+            if (!animar) coluna.style.animation = "none";
+            grupo.appendChild(coluna);
+
+            const valor = el("text", {
+                x: s.x + larguraColuna / 2, y: topo - 6, "text-anchor": "middle", class: "valor-coluna",
+            }, fmtNumero.format(s.valor));
+            valor.style.animationDelay = animar ? `${i * 60 + k * 30 + 350}ms` : "0ms";
+            if (!animar) valor.style.animation = "none";
+            grupo.appendChild(valor);
+        });
+
+        if (d.totalEntradas === 0 && d.totalSaidas === 0) {
+            grupo.appendChild(el("text", {
+                x: centro, y: baseY - 8, "text-anchor": "middle", class: "sem-movimento",
+            }, compacto ? "—" : "sem movimento"));
+        }
+
+        grupo.appendChild(el("text", {
+            x: centro, y: baseY + 20, "text-anchor": "middle", class: "rotulo-dia" + (ehHoje(d) ? " hoje" : ""),
+        }, ehHoje(d) ? "hoje" : (compacto ? rotuloSemana(d) : rotuloCurto(d))));
+
+        // Faixa do dia inteiro: alvo do mouse/teclado (maior que as colunas).
+        const faixa = el("rect", {
+            x: x0 + 2, y: margem.topo - 10, width: larguraFaixa - 4, height: alturaUtil + 10, rx: 6,
+            class: "faixa-dia", tabindex: 0, "aria-label":
+                `${rotuloLongo(d)}: entraram ${d.totalEntradas} peças em ${d.movimentacoesDeEntrada} movimentações; ` +
+                `saíram ${d.totalSaidas} peças em ${d.movimentacoesDeSaida} movimentações`,
+        });
+        const mostrar = () => {
+            grupo.classList.add("ativo");
+            mostrarTooltip(tooltip, d, centro, larguraFaixa, largura, y(Math.max(d.totalEntradas, d.totalSaidas)));
+        };
+        const esconder = () => {
+            grupo.classList.remove("ativo");
+            tooltip.classList.remove("visivel");
+        };
+        faixa.addEventListener("pointerenter", mostrar);
+        faixa.addEventListener("focus", mostrar);
+        faixa.addEventListener("pointerleave", esconder);
+        faixa.addEventListener("blur", esconder);
+        grupo.appendChild(faixa); // por cima das colunas, para o mouse não "perder" o dia
+
+        svg.appendChild(grupo);
     });
 
-    svgConteudo += `<line x1="0" y1="${alturaUtil}" x2="${largura}" y2="${alturaUtil}" stroke="#e2e8f0" stroke-width="1"></line>`;
+    primeiraRenderizacao = false;
+}
 
-    svg.innerHTML = svgConteudo;
+function mostrarTooltip(tooltip, d, centro, larguraFaixa, larguraTotal, topoColunas) {
+    tooltip.replaceChildren();
+    const titulo = document.createElement("div");
+    titulo.className = "tooltip-titulo";
+    titulo.textContent = rotuloLongo(d);
+    tooltip.appendChild(titulo);
+
+    [
+        ["Entradas", d.totalEntradas, d.movimentacoesDeEntrada, "var(--serie-entrada)"],
+        ["Saídas", d.totalSaidas, d.movimentacoesDeSaida, "var(--serie-saida)"],
+    ].forEach(([nome, pecas, movs, cor]) => {
+        const linha = document.createElement("div");
+        linha.className = "tooltip-linha";
+        const chave = document.createElement("span");
+        chave.className = "tooltip-chave";
+        chave.style.background = cor;
+        const valor = document.createElement("strong");
+        valor.textContent = `${fmtNumero.format(pecas)} ${pecas === 1 ? "peça" : "peças"}`;
+        const detalhe = document.createElement("span");
+        detalhe.textContent = `${nome.toLowerCase()} · ${pluralMov(movs)}`;
+        linha.append(chave, valor, detalhe);
+        tooltip.appendChild(linha);
+    });
+
+    tooltip.classList.add("visivel");
+    const larguraTooltip = tooltip.offsetWidth;
+    let esquerda = centro + larguraFaixa / 2 + 4;
+    if (esquerda + larguraTooltip > larguraTotal) {
+        esquerda = centro - larguraFaixa / 2 - larguraTooltip - 4;
+    }
+    tooltip.style.left = `${Math.max(0, esquerda)}px`;
+    tooltip.style.top = `${Math.max(0, topoColunas - 10)}px`;
 }

@@ -1,27 +1,41 @@
 package com.prostock.service;
 
+import com.prostock.dto.MovimentacaoRequest;
 import com.prostock.dto.ProdutoRequest;
 import com.prostock.exception.RecursoNaoEncontradoException;
 import com.prostock.exception.RegraDeNegocioException;
 import com.prostock.model.Categoria;
 import com.prostock.model.Fornecedor;
+import com.prostock.model.MotivoMovimentacao;
 import com.prostock.model.Produto;
+import com.prostock.model.Usuario;
+import com.prostock.model.enums.Cargo;
+import com.prostock.model.enums.TipoMovimentacao;
 import com.prostock.repository.CategoriaRepository;
 import com.prostock.repository.FornecedorRepository;
+import com.prostock.repository.MotivoMovimentacaoRepository;
 import com.prostock.repository.ProdutoImagemRepository;
 import com.prostock.repository.ProdutoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,6 +53,10 @@ class ProdutoServiceTest {
     private ImagemStorageService imagemStorageService;
     @Mock
     private AlertaService alertaService;
+    @Mock
+    private MovimentacaoService movimentacaoService;
+    @Mock
+    private MotivoMovimentacaoRepository motivoMovimentacaoRepository;
 
     private ProdutoService produtoService;
 
@@ -49,7 +67,8 @@ class ProdutoServiceTest {
     void setUp() {
         produtoService = new ProdutoService(
                 produtoRepository, categoriaRepository, fornecedorRepository,
-                produtoImagemRepository, imagemStorageService, alertaService);
+                produtoImagemRepository, imagemStorageService, alertaService,
+                movimentacaoService, motivoMovimentacaoRepository);
 
         categoria = Categoria.builder().id(1L).nome("Freios").build();
         fornecedor = Fornecedor.builder().id(1L).razaoSocial("Autopeças Rio Grande").cnpj("12345678000199").build();
@@ -136,5 +155,113 @@ class ProdutoServiceTest {
 
         assertThat(atualizado.getQuantidadeAtual()).isEqualTo(42);
         assertThat(atualizado.getNome()).isEqualTo("Pastilha Atualizada");
+    }
+
+    // ---------------------------------------------------------------
+    // UC07 — ajuste de inventário (contagem física)
+    // ---------------------------------------------------------------
+
+    private Produto produtoComEstoque(int quantidade) {
+        return Produto.builder()
+                .id(1L).nome("Pastilha").sku("PF-001")
+                .preco(BigDecimal.TEN).quantidadeAtual(quantidade)
+                .estoqueMinimo(5).estoqueMaximo(50)
+                .categoria(categoria).fornecedor(fornecedor)
+                .build();
+    }
+
+    private Usuario administrador() {
+        return Usuario.builder().id(1L).nome("Admin").email("admin@prostock.com")
+                .senhaHash("hash").cargo(Cargo.ADMINISTRADOR).ativo(true).build();
+    }
+
+    private MotivoMovimentacao motivoAjuste() {
+        return MotivoMovimentacao.builder().id(5L).descricao("AJUSTE_INVENTARIO").build();
+    }
+
+    @Test
+    void ajustarInventario_contagemMenorQueOSistema_deveRegistrarSaidaDaDiferencaComMotivoDeAjuste() {
+        when(produtoRepository.findById(1L)).thenReturn(Optional.of(produtoComEstoque(42)));
+        when(motivoMovimentacaoRepository.findByDescricaoIgnoreCase("AJUSTE_INVENTARIO"))
+                .thenReturn(Optional.of(motivoAjuste()));
+        Usuario admin = administrador();
+
+        produtoService.ajustarInventario(1L, 40, "contagem de fim de mês", admin);
+
+        ArgumentCaptor<MovimentacaoRequest> captor = ArgumentCaptor.forClass(MovimentacaoRequest.class);
+        verify(movimentacaoService).registrar(captor.capture(), eq(admin));
+        MovimentacaoRequest registrada = captor.getValue();
+        assertThat(registrada.tipo()).isEqualTo(TipoMovimentacao.SAIDA);
+        assertThat(registrada.quantidade()).isEqualTo(2);
+        assertThat(registrada.motivoId()).isEqualTo(5L);
+        assertThat(registrada.observacao()).contains("42 → 40").contains("contagem de fim de mês");
+    }
+
+    @Test
+    void ajustarInventario_contagemMaiorQueOSistema_deveRegistrarEntradaDaDiferenca() {
+        when(produtoRepository.findById(1L)).thenReturn(Optional.of(produtoComEstoque(10)));
+        when(motivoMovimentacaoRepository.findByDescricaoIgnoreCase("AJUSTE_INVENTARIO"))
+                .thenReturn(Optional.of(motivoAjuste()));
+
+        produtoService.ajustarInventario(1L, 13, null, administrador());
+
+        ArgumentCaptor<MovimentacaoRequest> captor = ArgumentCaptor.forClass(MovimentacaoRequest.class);
+        verify(movimentacaoService).registrar(captor.capture(), any(Usuario.class));
+        assertThat(captor.getValue().tipo()).isEqualTo(TipoMovimentacao.ENTRADA);
+        assertThat(captor.getValue().quantidade()).isEqualTo(3);
+    }
+
+    @Test
+    void ajustarInventario_contagemIgualAoSistema_naoDeveGerarMovimentacao() {
+        when(produtoRepository.findById(1L)).thenReturn(Optional.of(produtoComEstoque(42)));
+
+        Produto resultado = produtoService.ajustarInventario(1L, 42, null, administrador());
+
+        assertThat(resultado.getQuantidadeAtual()).isEqualTo(42);
+        verifyNoInteractions(movimentacaoService);
+    }
+
+    @Test
+    void ajustarInventario_comQuantidadeNegativa_deveLancarRegraDeNegocio() {
+        assertThatThrownBy(() -> produtoService.ajustarInventario(1L, -1, null, administrador()))
+                .isInstanceOf(RegraDeNegocioException.class);
+
+        verifyNoInteractions(movimentacaoService);
+    }
+
+    // ---------------------------------------------------------------
+    // Busca por nome, SKU ou aplicação
+    // ---------------------------------------------------------------
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void listarPaginado_comTexto_deveUsarABuscaPorNomeSkuOuAplicacao() {
+        PageRequest pagina = PageRequest.of(0, 10);
+        when(produtoRepository.findAll(any(Specification.class), eq(pagina))).thenReturn(Page.empty());
+
+        produtoService.listarPaginado("gol 1997", pagina);
+
+        verify(produtoRepository).findAll(any(Specification.class), eq(pagina));
+        verify(produtoRepository, never()).findByAtivoTrue(any(PageRequest.class));
+    }
+
+    @Test
+    void listarPaginado_semTexto_deveListarTodosOsAtivos() {
+        PageRequest pagina = PageRequest.of(0, 10);
+        when(produtoRepository.findByAtivoTrue(pagina)).thenReturn(new PageImpl<>(List.of()));
+
+        produtoService.listarPaginado("  ", pagina);
+
+        verify(produtoRepository).findByAtivoTrue(pagina);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void buscar_deveOrdenarPorNome() {
+        when(produtoRepository.findAll(any(Specification.class), any(Sort.class))).thenReturn(List.of());
+
+        produtoService.buscar("cabo");
+
+        verify(produtoRepository).findAll(any(Specification.class), eq(Sort.by("nome")));
     }
 }

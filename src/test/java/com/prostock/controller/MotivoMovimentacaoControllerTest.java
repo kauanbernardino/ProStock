@@ -2,6 +2,7 @@ package com.prostock.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.prostock.config.SecurityConfig;
+import com.prostock.exception.RegraDeNegocioException;
 import com.prostock.model.MotivoMovimentacao;
 import com.prostock.security.CustomUserDetailsService;
 import com.prostock.service.MotivoMovimentacaoService;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -85,5 +87,16 @@ class MotivoMovimentacaoControllerTest {
     void remover_comUsuarioAdministrador_deveRetornar204() throws Exception {
         mockMvc.perform(delete("/api/motivos/1").with(csrf()))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void remover_motivoDoSistema_deveRetornar400ComMensagem() throws Exception {
+        doThrow(new RegraDeNegocioException("O motivo 'VENDA' é usado automaticamente pelo sistema e não pode ser removido"))
+                .when(motivoMovimentacaoService).remover(2L);
+
+        mockMvc.perform(delete("/api/motivos/2").with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagem").value(org.hamcrest.Matchers.containsString("VENDA")));
     }
 }

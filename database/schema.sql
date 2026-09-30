@@ -70,6 +70,7 @@ CREATE TABLE produtos (
     ativo               BOOLEAN         NOT NULL DEFAULT TRUE,
     criado_em           TIMESTAMP       NOT NULL DEFAULT now(),
     atualizado_em       TIMESTAMP       NOT NULL DEFAULT now(),
+    versao              BIGINT          NOT NULL DEFAULT 0,
 
     CONSTRAINT uq_produtos_sku UNIQUE (sku),
     CONSTRAINT fk_produtos_categoria
@@ -221,7 +222,7 @@ CREATE TABLE alertas (
     CONSTRAINT fk_alertas_produto
         FOREIGN KEY (produto_id) REFERENCES produtos (id)
         ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT ck_alertas_tipo CHECK (tipo IN ('ESTOQUE_BAIXO', 'ESTOQUE_OBSOLETO', 'RUPTURA'))
+    CONSTRAINT ck_alertas_tipo CHECK (tipo IN ('ESTOQUE_BAIXO', 'ESTOQUE_EXCESSO', 'ESTOQUE_OBSOLETO', 'RUPTURA'))
 );
 
 CREATE INDEX idx_alertas_produto ON alertas (produto_id);

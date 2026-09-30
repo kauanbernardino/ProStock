@@ -17,6 +17,8 @@ public interface MovimentacaoRepository extends JpaRepository<Movimentacao, Long
 
     List<Movimentacao> findByUsuarioIdOrderByDataHoraDesc(Long usuarioId);
 
+    boolean existsByMotivoId(Long motivoId);
+
     @Query("""
         SELECT COALESCE(SUM(m.quantidade), 0) FROM Movimentacao m
         WHERE m.produto.id = :produtoId

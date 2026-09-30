@@ -68,19 +68,69 @@
                 <div class="rotulo">Em ruptura</div>
                 <div class="valor" id="kpi-ruptura">—</div>
             </div>
+            <div class="kpi alerta">
+                <div class="rotulo">Acima do estoque máximo</div>
+                <div class="valor" id="kpi-acima-maximo">—</div>
+            </div>
             <div class="kpi">
                 <div class="rotulo">Alertas não lidos</div>
                 <div class="valor" id="kpi-alertas">—</div>
             </div>
         </div>
 
-        <div class="card">
-            <h2>Movimentações da semana</h2>
-            <svg id="grafico-semanal" class="grafico-semanal" viewBox="0 0 700 220" preserveAspectRatio="none"></svg>
-            <div class="grafico-legenda">
-                <span><span class="ponto-legenda" style="background:var(--cor-sucesso);"></span> Entradas</span>
-                <span><span class="ponto-legenda" style="background:var(--cor-perigo);"></span> Saídas</span>
+        <div class="card grafico-card">
+            <div class="grafico-cabecalho">
+                <div>
+                    <h2>Movimentações da semana</h2>
+                    <div class="grafico-subtitulo">Peças que entraram e saíram do estoque nos últimos 7 dias</div>
+                </div>
+                <div class="grafico-legenda" aria-hidden="true">
+                    <span><span class="chave-legenda chave-entrada"></span>Entradas</span>
+                    <span><span class="chave-legenda chave-saida"></span>Saídas</span>
+                </div>
             </div>
+
+            <div class="grafico-resumo">
+                <div class="resumo-item">
+                    <div class="resumo-rotulo"><span class="chave-legenda chave-entrada"></span>Entradas na semana</div>
+                    <div class="resumo-valor" id="resumo-entradas">—</div>
+                    <div class="resumo-detalhe" id="resumo-entradas-mov"></div>
+                </div>
+                <div class="resumo-item">
+                    <div class="resumo-rotulo"><span class="chave-legenda chave-saida"></span>Saídas na semana</div>
+                    <div class="resumo-valor" id="resumo-saidas">—</div>
+                    <div class="resumo-detalhe" id="resumo-saidas-mov"></div>
+                </div>
+                <div class="resumo-item">
+                    <div class="resumo-rotulo">Dia mais movimentado</div>
+                    <div class="resumo-valor" id="resumo-pico">—</div>
+                    <div class="resumo-detalhe" id="resumo-pico-detalhe"></div>
+                </div>
+            </div>
+
+            <div class="grafico-area" id="grafico-area">
+                <svg id="grafico-semanal" class="grafico-semanal" role="img"
+                     aria-label="Gráfico de colunas com as entradas e saídas de peças em cada um dos últimos 7 dias"></svg>
+                <div class="grafico-tooltip" id="grafico-tooltip" role="status" aria-live="polite"></div>
+            </div>
+
+            <details class="grafico-tabela">
+                <summary>Ver os números em tabela</summary>
+                <div class="tabela-scroll">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Dia</th>
+                            <th>Entradas (peças)</th>
+                            <th>Movimentações de entrada</th>
+                            <th>Saídas (peças)</th>
+                            <th>Movimentações de saída</th>
+                        </tr>
+                        </thead>
+                        <tbody id="grafico-tabela-corpo"></tbody>
+                    </table>
+                </div>
+            </details>
         </div>
 
         <div class="card">

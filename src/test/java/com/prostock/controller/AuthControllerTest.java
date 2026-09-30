@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -108,5 +109,20 @@ class AuthControllerTest {
         mockMvc.perform(get("/api/auth/me").with(user(new UsuarioPrincipal(usuarioValido()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value("Maria Souza"));
+    }
+
+    @Test
+    void login_comUsuarioInativo_deveRetornar401ComMensagemClara() throws Exception {
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new DisabledException("User is disabled"));
+
+        LoginRequest request = new LoginRequest("maria@prostock.com", "senha123");
+
+        mockMvc.perform(post("/api/auth/login")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.erro").value("Usuário inativo"));
     }
 }

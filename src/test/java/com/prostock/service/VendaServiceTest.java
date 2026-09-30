@@ -131,4 +131,31 @@ class VendaServiceTest {
 
         verify(produtoRepository, never()).save(any());
     }
+
+    @Test
+    void finalizar_comUmItemSemEstoque_naoDeveBaixarNenhumItemDaVenda() {
+        // Regra central do TCC: a venda é tudo ou nada. O primeiro item tem
+        // estoque, o segundo não — nenhum dos dois pode ser baixado.
+        Produto semEstoque = Produto.builder()
+                .id(2L).nome("Disco de Freio").sku("DF-002")
+                .preco(new BigDecimal("150.00"))
+                .quantidadeAtual(1).estoqueMinimo(2).estoqueMaximo(10)
+                .ativo(true)
+                .build();
+        when(produtoRepository.findById(1L)).thenReturn(Optional.of(produto));
+        when(produtoRepository.findById(2L)).thenReturn(Optional.of(semEstoque));
+
+        VendaRequest request = new VendaRequest(
+                List.of(new ItemVendaRequest(1L, 5), new ItemVendaRequest(2L, 3)), FormaPagamento.PIX);
+
+        assertThatThrownBy(() -> vendaService.finalizar(request, usuario))
+                .isInstanceOf(RegraDeNegocioException.class)
+                .hasMessageContaining("Estoque insuficiente para 'Disco de Freio'");
+
+        assertThat(produto.getQuantidadeAtual()).isEqualTo(20);
+        assertThat(semEstoque.getQuantidadeAtual()).isEqualTo(1);
+        verify(produtoRepository, never()).save(any());
+        verify(movimentacaoRepository, never()).save(any());
+        verify(vendaRepository, never()).save(any());
+    }
 }

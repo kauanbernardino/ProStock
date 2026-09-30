@@ -4,6 +4,7 @@ import com.prostock.model.Alerta;
 import com.prostock.model.enums.TipoAlerta;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,4 +17,6 @@ public interface AlertaRepository extends JpaRepository<Alerta, Long> {
     Optional<Alerta> findFirstByProdutoIdAndTipoAndLidoFalse(Long produtoId, TipoAlerta tipo);
 
     boolean existsByProdutoIdAndTipoAndLidoFalse(Long produtoId, TipoAlerta tipo);
+
+    boolean existsByProdutoIdAndTipoAndDataCriacaoAfter(Long produtoId, TipoAlerta tipo, LocalDateTime desde);
 }

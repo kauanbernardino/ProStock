@@ -58,6 +58,7 @@ async function buscarProdutos() {
                 <div class="resultado-item" data-id="${p.id}">
                     <div class="info">
                         <span>${escaparHtml(p.nome)}</span>
+                        ${aplicacao(p) ? `<span class="aplicacao">${escaparHtml(aplicacao(p))}</span>` : ""}
                         <span class="sku">SKU ${escaparHtml(p.sku)} — ${p.quantidadeAtual} un. disponível</span>
                     </div>
                     <strong>${formatarMoeda(p.preco)}</strong>
@@ -80,6 +81,19 @@ async function buscarProdutos() {
     } catch (erro) {
         exibirMensagem("mensagem", erro.message);
     }
+}
+
+/**
+ * Trecho da descrição que diz em qual veículo a peça serve. Peças com o mesmo
+ * nome (ex.: dois cabos de vela) só se diferenciam por aqui. Usa o texto depois
+ * de "Aplicação:" quando existir; senão, o começo da descrição.
+ */
+function aplicacao(produto) {
+    const descricao = (produto.descricao || "").trim();
+    if (!descricao) return "";
+    const marcada = descricao.match(/aplica[çc][ãa]o\s*:\s*(.+)/i);
+    const texto = (marcada ? marcada[1] : descricao).trim();
+    return texto.length > 90 ? texto.slice(0, 87) + "…" : texto;
 }
 
 function adicionarAoCarrinho(produto) {
@@ -202,6 +216,7 @@ function exibirRecibo(venda) {
     if (venda.formaPagamento === "PIX") {
         secaoPix.style.display = "block";
         document.getElementById("recibo-pix").textContent = venda.pixCopiaECola;
+        renderizarQrCodePix(venda.pixCopiaECola);
     } else {
         secaoPix.style.display = "none";
     }
@@ -247,6 +262,23 @@ function novaVenda() {
     atualizarSelecaoDeFormaDePagamento();
     document.getElementById("recibo").style.display = "none";
     document.getElementById("tela-carrinho").style.display = "block";
+}
+
+function renderizarQrCodePix(textoCopiaECola) {
+    const contador = document.getElementById("recibo-pix-qrcode");
+    contador.innerHTML = "";
+    if (!textoCopiaECola) return;
+    try {
+        const qr = qrcode(0, "M");
+        qr.addData(textoCopiaECola);
+        qr.make();
+        contador.innerHTML = qr.createSvgTag({ scalable: true });
+    } catch (erro) {
+        // Se o texto for grande demais para o QR (não deve ocorrer com o
+        // payload Pix padrão), a caixa fica em branco e o cliente ainda
+        // consegue pagar pelo código "copia e cola" logo abaixo.
+        contador.innerHTML = "";
+    }
 }
 
 async function copiarPix() {

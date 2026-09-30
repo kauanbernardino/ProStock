@@ -120,7 +120,8 @@ public class DashboardService {
     }
 
     /**
-     * Gráfico semanal: total de entradas e saídas por dia nos últimos 7 dias.
+     * Gráfico semanal: por dia dos últimos 7 dias (hoje incluído), quantas peças
+     * entraram e saíram e em quantas movimentações.
      */
     public List<GraficoSemanalResponse> graficoSemanal() {
         List<GraficoSemanalResponse> resultado = new ArrayList<>();
@@ -132,16 +133,15 @@ public class DashboardService {
             LocalDateTime fim = dia.atTime(LocalTime.MAX);
 
             var movimentacoesDoDia = movimentacaoRepository.findByDataHoraBetweenOrderByDataHoraDesc(inicio, fim);
-            long entradas = movimentacoesDoDia.stream()
-                    .filter(m -> m.getTipo() == TipoMovimentacao.ENTRADA)
-                    .mapToLong(m -> m.getQuantidade())
-                    .sum();
-            long saidas = movimentacoesDoDia.stream()
-                    .filter(m -> m.getTipo() == TipoMovimentacao.SAIDA)
-                    .mapToLong(m -> m.getQuantidade())
-                    .sum();
+            var entradas = movimentacoesDoDia.stream().filter(m -> m.getTipo() == TipoMovimentacao.ENTRADA).toList();
+            var saidas = movimentacoesDoDia.stream().filter(m -> m.getTipo() == TipoMovimentacao.SAIDA).toList();
 
-            resultado.add(new GraficoSemanalResponse(dia, entradas, saidas));
+            resultado.add(new GraficoSemanalResponse(
+                    dia,
+                    entradas.stream().mapToLong(m -> m.getQuantidade()).sum(),
+                    saidas.stream().mapToLong(m -> m.getQuantidade()).sum(),
+                    entradas.size(),
+                    saidas.size()));
         }
 
         return resultado;

@@ -3,11 +3,17 @@ server:
 
 app:
   upload-dir: ${UPLOAD_DIR:./uploads}
+  rotinas:
+    # Verificação automática de estoque obsoleto (segundo minuto hora dia mês dia-da-semana).
+    cron-obsolescencia: ${CRON_OBSOLESCENCIA:0 0 7 * * *}
   pix:
-    # Chave Pix tipo celular (Nubank) do Kauan, no formato internacional exigido pelo BR Code.
+    # Os dados reais da loja NÃO ficam aqui (este arquivo vai para o Git).
+    # Defina PIX_CHAVE, PIX_NOME_RECEBEDOR e PIX_CIDADE como variáveis de
+    # ambiente, ou app.pix.* em config/application.properties na raiz do
+    # projeto (carregado automaticamente pelo Spring Boot e ignorado pelo Git).
     chave: ${PIX_CHAVE:00000000000}
-    nome-recebedor: ${PIX_NOME_RECEBEDOR:Kauan Bernardino da Silva}
-    cidade: ${PIX_CIDADE:ASSIS}
+    nome-recebedor: ${PIX_NOME_RECEBEDOR:ProStock Autopecas}
+    cidade: ${PIX_CIDADE:SAO PAULO}
 
 spring:
   application:

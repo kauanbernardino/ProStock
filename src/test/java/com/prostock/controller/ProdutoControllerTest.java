@@ -7,7 +7,10 @@ import com.prostock.exception.RecursoNaoEncontradoException;
 import com.prostock.model.Categoria;
 import com.prostock.model.Fornecedor;
 import com.prostock.model.Produto;
+import com.prostock.model.Usuario;
+import com.prostock.model.enums.Cargo;
 import com.prostock.security.CustomUserDetailsService;
+import com.prostock.security.UsuarioPrincipal;
 import com.prostock.service.ProdutoService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,11 +23,16 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -165,5 +173,56 @@ class ProdutoControllerTest {
     void reativar_comUsuarioFuncionario_deveRetornar403() throws Exception {
         mockMvc.perform(patch("/api/produtos/10/reativar").with(csrf()))
                 .andExpect(status().isForbidden());
+    }
+
+    // ---------------------------------------------------------------
+    // UC07 — ajuste de inventário
+    // ---------------------------------------------------------------
+
+    private Usuario usuarioComCargo(Cargo cargo) {
+        return Usuario.builder().id(1L).nome("Teste").email("teste@prostock.com")
+                .senhaHash("hash").cargo(cargo).ativo(true).build();
+    }
+
+    @Test
+    void ajustarInventario_comAdministrador_deveRegistrarAjusteERetornarProduto() throws Exception {
+        Usuario admin = usuarioComCargo(Cargo.ADMINISTRADOR);
+        Produto ajustado = produtoExemplo();
+        ajustado.setQuantidadeAtual(17);
+        when(produtoService.ajustarInventario(eq(10L), eq(17), anyString(), any(Usuario.class))).thenReturn(ajustado);
+
+        mockMvc.perform(patch("/api/produtos/10/ajuste-inventario")
+                        .with(csrf())
+                        .with(user(new UsuarioPrincipal(admin)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("quantidade", 17, "observacao", "contagem"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quantidadeAtual").value(17));
+
+        verify(produtoService).ajustarInventario(eq(10L), eq(17), eq("contagem"), any(Usuario.class));
+    }
+
+    @Test
+    void ajustarInventario_comFuncionario_deveRetornar403() throws Exception {
+        mockMvc.perform(patch("/api/produtos/10/ajuste-inventario")
+                        .with(csrf())
+                        .with(user(new UsuarioPrincipal(usuarioComCargo(Cargo.FUNCIONARIO))))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("quantidade", 17))))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(produtoService);
+    }
+
+    @Test
+    void ajustarInventario_comQuantidadeNegativa_deveRetornar400() throws Exception {
+        mockMvc.perform(patch("/api/produtos/10/ajuste-inventario")
+                        .with(csrf())
+                        .with(user(new UsuarioPrincipal(usuarioComCargo(Cargo.ADMINISTRADOR))))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("quantidade", -3))))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(produtoService);
     }
 }

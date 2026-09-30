@@ -41,6 +41,10 @@
             display: flex;
             flex-direction: column;
         }
+        .resultado-item .aplicacao {
+            font-size: 13px;
+            color: var(--cor-texto);
+        }
         .resultado-item .sku {
             font-size: 12px;
             color: var(--cor-texto-suave);
@@ -91,6 +95,17 @@
             font-size: 12px;
             word-break: break-all;
             margin-bottom: 12px;
+        }
+        .pix-qrcode {
+            display: flex;
+            justify-content: center;
+            padding: 12px;
+            margin-bottom: 12px;
+            background: #ffffff;
+        }
+        .pix-qrcode svg {
+            width: 200px;
+            height: 200px;
         }
 
         .opcoes-pagamento {
@@ -186,7 +201,7 @@
             <div class="card no-imprimir">
                 <h2>Adicionar produto</h2>
                 <div class="busca-produto-wrap">
-                    <input type="search" id="campo-busca-produto" class="busca" placeholder="Buscar por nome ou SKU..." autocomplete="off">
+                    <input type="search" id="campo-busca-produto" class="busca" placeholder="Buscar por nome, SKU ou veículo (ex.: gol 1997)..." autocomplete="off">
                     <div id="resultados-busca" class="resultados-busca"></div>
                 </div>
             </div>
@@ -287,8 +302,9 @@
                 <div id="secao-pix">
                     <h2 style="margin-top:24px;">Pagamento via Pix</h2>
                     <p style="font-size:13px; color:var(--cor-texto-suave);">
-                        Peça ao cliente para copiar o código abaixo no aplicativo do banco dele ("Pix Copia e Cola").
+                        Peça ao cliente para escanear o QR code abaixo com o aplicativo do banco dele, ou usar a opção "Pix Copia e Cola" com o código logo abaixo do QR code.
                     </p>
+                    <div class="pix-qrcode" id="recibo-pix-qrcode"></div>
                     <div class="pix-caixa" id="recibo-pix"></div>
                     <button type="button" class="btn btn-secundario btn-pequeno no-imprimir" id="btn-copiar-pix">Copiar código Pix</button>
                 </div>
@@ -307,6 +323,7 @@
     </main>
 </div>
 
+<script src="/js/vendor/qrcode.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/venda.js"></script>

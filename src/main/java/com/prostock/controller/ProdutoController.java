@@ -1,8 +1,10 @@
 package com.prostock.controller;
 
+import com.prostock.dto.AjusteInventarioRequest;
 import com.prostock.dto.PaginaResponse;
 import com.prostock.dto.ProdutoRequest;
 import com.prostock.dto.ProdutoResponse;
+import com.prostock.security.UsuarioPrincipal;
 import com.prostock.service.ProdutoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,11 +12,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/produtos")
@@ -23,11 +25,15 @@ public class ProdutoController {
 
     private final ProdutoService produtoService;
 
+    /**
+     * Sem parâmetro: todos os produtos ativos. Com "nome": busca pelo texto no
+     * nome, no SKU ou na aplicação (o parâmetro manteve o nome por compatibilidade).
+     */
     @GetMapping
     public List<ProdutoResponse> listar(@RequestParam(required = false) String nome) {
         var produtos = (nome == null || nome.isBlank())
                 ? produtoService.listarTodos()
-                : produtoService.buscarPorNome(nome);
+                : produtoService.buscar(nome);
         return produtos.stream().map(ProdutoResponse::from).toList();
     }
 
@@ -70,10 +76,16 @@ public class ProdutoController {
         return ProdutoResponse.from(produtoService.atualizar(id, request));
     }
 
+    /**
+     * UC07: ajuste de inventário (contagem física). Restrito ao Administrador
+     * pela regra de PATCH /api/produtos/** do SecurityConfig.
+     */
     @PatchMapping("/{id}/ajuste-inventario")
-    public ProdutoResponse ajustarInventario(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
-        Integer novaQuantidade = body.get("quantidade");
-        return ProdutoResponse.from(produtoService.ajustarQuantidade(id, novaQuantidade));
+    public ProdutoResponse ajustarInventario(@PathVariable Long id,
+                                             @Valid @RequestBody AjusteInventarioRequest request,
+                                             @AuthenticationPrincipal UsuarioPrincipal principal) {
+        return ProdutoResponse.from(produtoService.ajustarInventario(
+                id, request.quantidade(), request.observacao(), principal.getUsuario()));
     }
 
     @DeleteMapping("/{id}")
