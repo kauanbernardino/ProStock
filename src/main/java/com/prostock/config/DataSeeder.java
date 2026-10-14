@@ -9,11 +9,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-/**
- * Garante que exista um usuário administrador ao subir a aplicação pela
- * primeira vez, já que o cadastro de usuários (UC01) exige autenticação
- * como ADMINISTRADOR.
- */
+/** Cria o administrador padrão quando não há nenhum usuário cadastrado. */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -38,6 +34,6 @@ public class DataSeeder implements CommandLineRunner {
         usuarioRepository.save(admin);
 
         log.warn("Nenhum usuário encontrado — usuário administrador padrão criado " +
-                "(admin@prostock.com / admin123). Altere a senha assim que possível.");
+                "(admin@prostock.com / admin123).");
     }
 }

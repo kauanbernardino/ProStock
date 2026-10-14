@@ -13,8 +13,7 @@ class PixServiceTest {
 
     @Test
     void crc16_deveBaterComVetorDeTestePadraoCcittFalse() {
-        // Vetor de teste de referência do algoritmo CRC-16/CCITT-FALSE (poly 0x1021, init 0xFFFF):
-        // CRC16("123456789") = 0x29B1 — usado para validar qualquer implementação desse algoritmo.
+        // Vetor de referência do CRC-16/CCITT-FALSE: CRC16("123456789") = 0x29B1.
         assertThat(pixService.crc16("123456789")).isEqualTo("29B1");
     }
 

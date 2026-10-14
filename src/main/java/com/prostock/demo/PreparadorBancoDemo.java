@@ -22,28 +22,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 
-/**
- * Cria e popula o banco de demonstração antes de o Spring subir.
- *
- * Passos: (1) cria o banco prostock_demo se não existir; (2) se ainda não tem
- * tabelas, aplica database/schema.sql e src/main/resources/demo/dados-demo-N.sql
- * numa única transação; (3) copia as fotos de demonstração para a pasta de
- * upload usada pelo perfil "demo".
- *
- * Os dados são gerados por ferramentas/demo/gerar_dados_demo.py.
- */
+/** Cria e popula o banco prostock_demo antes de o Spring subir e copia as fotos de demonstração. */
 class PreparadorBancoDemo {
 
     private static final Logger log = LoggerFactory.getLogger(PreparadorBancoDemo.class);
 
     static final String NOME_BANCO = "prostock_demo";
     private static final Path SCHEMA = Path.of("database", "schema.sql");
-    /**
-     * Há uma versão dos dados para cada dia da semana (dados-demo-1.sql = segunda
-     * ... dados-demo-7.sql = domingo). Carregando a do dia de hoje, as datas são
-     * deslocadas por semanas inteiras e os dias da semana ficam coerentes (sem
-     * venda no domingo, loja aberta até ontem).
-     */
+    /** Um arquivo de dados por dia da semana: carregar o do dia mantém os dias da semana coerentes ao deslocar as datas. */
     private static String arquivoDeDadosDeHoje() {
         return "demo/dados-demo-" + LocalDate.now().getDayOfWeek().getValue() + ".sql";
     }

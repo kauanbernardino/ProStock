@@ -58,10 +58,7 @@ public class UsuarioService {
                 .ifPresent(outro -> {
                     throw new RegraDeNegocioException("Já existe um usuário com o e-mail '" + request.email() + "'");
                 });
-        // O Spring Security guarda cargo e e-mail do usuário dentro da sessão.
-        // Se algum dado de acesso mudar, as sessões abertas precisam cair: senão
-        // um funcionário rebaixado continuaria com permissão de administrador
-        // até fazer logout, e uma senha trocada não derrubaria quem já entrou.
+        // Cargo e e-mail ficam guardados na sessão: mudar dados de acesso encerra as sessões abertas.
         String emailAnterior = usuario.getEmail();
         boolean trocouSenha = request.senha() != null && !request.senha().isBlank();
         boolean mudouAcesso = usuario.getCargo() != request.cargo()
@@ -82,17 +79,7 @@ public class UsuarioService {
         return salvo;
     }
 
-    /**
-     * Inativa a conta e encerra na hora todas as sessões abertas dela.
-     *
-     * Só marcar ativo=false bloquearia o PRÓXIMO login (isEnabled() em
-     * UsuarioPrincipal), mas uma sessão já aberta continuaria válida até
-     * expirar, porque o Spring Security guarda o usuário autenticado dentro
-     * da sessão. Como as sessões ficam na tabela SPRING_SESSION (Spring
-     * Session JDBC), indexadas pelo e-mail do usuário, dá para apagá-las
-     * direto: a próxima requisição dele já volta 401 e o front manda para
-     * a tela de login.
-     */
+    /** Inativa o usuário e apaga as sessões abertas dele (SPRING_SESSION). */
     public void inativar(Long id) {
         Usuario usuario = buscarPorId(id);
         usuario.setAtivo(false);

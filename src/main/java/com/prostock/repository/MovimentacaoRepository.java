@@ -25,10 +25,7 @@ public interface MovimentacaoRepository extends JpaRepository<Movimentacao, Long
         """)
     Long somarSaidasDoProdutoDesde(@Param("produtoId") Long produtoId, @Param("desde") LocalDateTime desde);
 
-    /**
-     * UC03: soma as movimentações de um produto e tipo dentro de um período
-     * fechado (usado no relatório gerencial de valor em estoque e giro).
-     */
+    /** UC03: soma das movimentações de um produto e tipo num período. */
     @Query("""
         SELECT COALESCE(SUM(m.quantidade), 0) FROM Movimentacao m
         WHERE m.produto.id = :produtoId

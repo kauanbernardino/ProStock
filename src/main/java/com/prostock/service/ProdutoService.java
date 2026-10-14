@@ -50,10 +50,7 @@ public class ProdutoService {
         return produtoRepository.findByAtivoTrue();
     }
 
-    /**
-     * Listagem paginada da tela de Produtos. Com texto de busca, procura no
-     * nome, no SKU e na aplicação (ver ProdutoEspecificacoes.ativosComTermos).
-     */
+    /** Listagem paginada; com texto, busca por nome, SKU ou aplicação. */
     @Transactional(readOnly = true)
     public Page<Produto> listarPaginado(String busca, Pageable pageable) {
         return (busca == null || busca.isBlank())
@@ -67,10 +64,7 @@ public class ProdutoService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado: " + id));
     }
 
-    /**
-     * Busca da tela de Vendas: nome, SKU ou aplicação do veículo, em ordem
-     * alfabética de nome.
-     */
+    /** Busca da tela de Vendas, em ordem de nome. */
     @Transactional(readOnly = true)
     public List<Produto> buscar(String busca) {
         return produtoRepository.findAll(ProdutoEspecificacoes.ativosComTermos(busca), Sort.by("nome"));
@@ -140,24 +134,14 @@ public class ProdutoService {
         produto.setLocalizacaoFisica(request.localizacaoFisica());
         produto.setCategoria(categoria);
         produto.setFornecedor(fornecedor);
-        // A quantidade em estoque só é alterada via movimentações (UC02/UC04/UC05/UC07),
-        // nunca diretamente pela edição do cadastro do produto.
+        // A quantidade só muda por movimentação (ver ajustarInventario).
 
         Produto salvo = produtoRepository.save(produto);
         alertaService.avaliarNivelDeEstoque(salvo);
         return salvo;
     }
 
-    /**
-     * UC07: ajuste de inventário a partir da contagem física. O administrador
-     * informa a quantidade real contada e o sistema registra a DIFERENÇA como
-     * uma movimentação (ENTRADA ou SAÍDA) com o motivo AJUSTE_INVENTARIO.
-     *
-     * A baixa/soma em si é delegada ao MovimentacaoService, que é o único
-     * ponto do sistema que altera a quantidade em estoque: assim o ajuste
-     * fica no histórico (quem, quando, de quanto para quanto) e passa pela
-     * mesma reavaliação de alertas de qualquer outra movimentação.
-     */
+    /** UC07: registra a diferença entre a contagem física e o sistema como movimentação AJUSTE_INVENTARIO. */
     public Produto ajustarInventario(Long id, int quantidadeContada, String observacao, Usuario usuario) {
         if (quantidadeContada < 0) {
             throw new RegraDeNegocioException("A quantidade em estoque não pode ser negativa");
@@ -167,7 +151,7 @@ public class ProdutoService {
         int quantidadeAnterior = produto.getQuantidadeAtual();
         int diferenca = quantidadeContada - quantidadeAnterior;
         if (diferenca == 0) {
-            // Contagem confere com o sistema: nada a ajustar, nenhuma movimentação vazia.
+            // Contagem igual ao sistema: nada a registrar.
             return produto;
         }
 
@@ -205,24 +189,17 @@ public class ProdutoService {
         return produtoRepository.findByAtivoFalse();
     }
 
-    /**
-     * Reverte a inativação. Necessário porque o SKU é único no banco mesmo
-     * para produtos inativos — sem isso, um produto "removido" trava o SKU
-     * pra sempre e não há como recadastrar a mesma peça.
-     */
+    /** Desfaz a inativação (o SKU continua reservado pelo produto inativo). */
     public Produto reativar(Long id) {
         Produto produto = buscarPorId(id);
         produto.setAtivo(true);
         Produto salvo = produtoRepository.save(produto);
-        // Volta a ser acompanhado: se reativou zerado ou abaixo do mínimo, o alerta reaparece.
+        // Reavalia os alertas do produto reativado.
         alertaService.avaliarNivelDeEstoque(salvo);
         return salvo;
     }
 
-    /**
-     * Fotos do produto: usadas pelo vendedor para conferir visualmente a peça
-     * quando o cliente a traz em mãos sem saber o veículo/ano exato.
-     */
+    /** Adiciona uma foto ao produto (até MAX_IMAGENS_POR_PRODUTO). */
     public Produto adicionarImagem(Long produtoId, MultipartFile arquivo) {
         Produto produto = buscarPorId(produtoId);
 

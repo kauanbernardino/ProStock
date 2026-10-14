@@ -29,19 +29,11 @@ public class MovimentacaoService {
     private final MotivoMovimentacaoRepository motivoMovimentacaoRepository;
     private final AlertaService alertaService;
 
-    /**
-     * Motivos que só o próprio sistema lança: ESTORNO nasce do cancelamento de
-     * uma venda e AJUSTE_INVENTARIO do UC07 (restrito ao Administrador).
-     */
+    /** Motivos lançados apenas pelo sistema (cancelamento de venda e UC07). */
     static final Set<String> MOTIVOS_EXCLUSIVOS_DO_SISTEMA = Set.of("ESTORNO", "AJUSTE_INVENTARIO");
     private static final String MOTIVO_VENDA = "VENDA";
 
-    /**
-     * Movimentação lançada pela tela de Movimentações. Além das regras de
-     * registrar(), barra os motivos exclusivos do sistema. VENDA continua
-     * permitida para regularizar o estoque de uma venda que não foi registrada
-     * na hora (ex.: feita longe do computador), mas só como SAÍDA.
-     */
+    /** Movimentação da tela de Movimentações: bloqueia os motivos do sistema e aceita VENDA só como saída. */
     public Movimentacao registrarManual(MovimentacaoRequest request, Usuario usuario) {
         MotivoMovimentacao motivo = motivoMovimentacaoRepository.findById(request.motivoId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Motivo não encontrado: " + request.motivoId()));
@@ -57,11 +49,7 @@ public class MovimentacaoService {
         return registrar(request, usuario);
     }
 
-    /**
-     * UC02/UC04/UC05: registra entrada, saída, devolução ou avaria como uma
-     * movimentação, atualizando a quantidade em estoque do produto e
-     * disparando os alertas cabíveis (UC11).
-     */
+    /** UC02/UC04/UC05: registra a movimentação, atualiza o estoque e reavalia os alertas. */
     public Movimentacao registrar(MovimentacaoRequest request, Usuario usuario) {
         Produto produto = produtoRepository.findById(request.produtoId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado: " + request.produtoId()));

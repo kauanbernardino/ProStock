@@ -483,9 +483,8 @@ input:focus, select:focus, textarea:focus {
     padding: 12px;
 }
 
-/* ---------- Gráfico semanal (SVG simples, sem dependências) ---------- */
 
-/* ---------------- Gráfico "Movimentações da semana" ---------------- */
+/* ---------- Gráfico "Movimentações da semana" ---------- */
 .grafico-card {
     --serie-entrada: #2a78d6;
     --serie-saida: #eb6834;

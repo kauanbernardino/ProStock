@@ -39,10 +39,7 @@ public class ItemVenda {
     @Column(nullable = false)
     private Integer quantidade;
 
-    /**
-     * Preço no momento da venda — não referencia o preço atual do produto,
-     * que pode mudar depois sem afetar vendas já registradas.
-     */
+    /** Preço do produto no momento da venda. */
     @NotNull
     @Column(name = "preco_unitario", nullable = false, precision = 12, scale = 2)
     private BigDecimal precoUnitario;

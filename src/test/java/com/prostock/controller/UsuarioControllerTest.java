@@ -51,7 +51,7 @@ class UsuarioControllerTest {
     @Test
     @WithMockUser(roles = "FUNCIONARIO")
     void listar_comUsuarioFuncionario_deveRetornar403() throws Exception {
-        // Diferente de produtos/vendas: aqui até a LEITURA é exclusiva do administrador.
+        // Usuários: até a leitura é só do administrador.
         mockMvc.perform(get("/api/usuarios"))
                 .andExpect(status().isForbidden());
     }

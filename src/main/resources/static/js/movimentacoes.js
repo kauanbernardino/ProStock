@@ -16,7 +16,7 @@ async function carregarProdutos() {
         .join("");
 }
 
-// Lançados só pelo sistema: ESTORNO (cancelamento de venda) e AJUSTE_INVENTARIO (UC07).
+// Motivos lançados apenas pelo sistema
 const MOTIVOS_EXCLUSIVOS_DO_SISTEMA = ["ESTORNO", "AJUSTE_INVENTARIO"];
 
 async function carregarMotivos() {
@@ -30,10 +30,7 @@ async function carregarMotivos() {
     ajustarTipoPeloMotivo();
 }
 
-/**
- * VENDA manual serve para regularizar o estoque de uma venda não registrada
- * na hora, então é sempre uma saída.
- */
+/** VENDA manual é sempre uma saída. */
 function ajustarTipoPeloMotivo() {
     const opcao = document.getElementById("mov-motivo").selectedOptions[0];
     const tipo = document.getElementById("mov-tipo");

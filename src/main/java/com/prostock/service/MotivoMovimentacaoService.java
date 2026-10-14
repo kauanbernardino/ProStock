@@ -17,11 +17,7 @@ import java.util.Set;
 @Transactional
 public class MotivoMovimentacaoService {
 
-    /**
-     * Motivos que o próprio código usa pelo nome (VendaService e
-     * ProdutoService). Se algum deles fosse removido, vendas, cancelamentos e
-     * ajustes de inventário passariam a falhar.
-     */
+    /** Motivos usados pelo próprio código; não podem ser removidos. */
     static final Set<String> MOTIVOS_DO_SISTEMA = Set.of("VENDA", "ESTORNO", "AJUSTE_INVENTARIO");
 
     private final MotivoMovimentacaoRepository motivoMovimentacaoRepository;

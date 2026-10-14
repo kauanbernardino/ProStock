@@ -21,9 +21,7 @@ public class ImagemStorageService {
     @Value("${app.upload-dir}")
     private String uploadDir;
 
-    /**
-     * Salva a imagem em disco e devolve o caminho relativo (servido em /uploads/**).
-     */
+    /** Salva a imagem em disco e devolve o caminho servido em /uploads/**. */
     public String salvar(MultipartFile arquivo) {
         if (arquivo == null || arquivo.isEmpty()) {
             throw new RegraDeNegocioException("Nenhum arquivo de imagem enviado");
@@ -62,7 +60,7 @@ public class ImagemStorageService {
             Path arquivo = Path.of(uploadDir, relativo);
             Files.deleteIfExists(arquivo);
         } catch (IOException ignorado) {
-            // Falha ao remover o arquivo físico não deve impedir a remoção do registro.
+            // Falha ao apagar o arquivo não impede remover o registro.
         }
     }
 

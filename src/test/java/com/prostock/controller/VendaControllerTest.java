@@ -47,11 +47,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * VendaController concentra o fluxo mais sensível do sistema (estoque,
- * pagamento, cancelamento) — por isso merece a mesma cobertura de
- * ProdutoControllerTest, e mais alguns casos específicos dele.
- */
 @WebMvcTest(VendaController.class)
 @Import(SecurityConfig.class)
 class VendaControllerTest {
@@ -71,9 +66,7 @@ class VendaControllerTest {
     @MockBean
     private CustomUserDetailsService customUserDetailsService;
 
-    // VendaController usa @AuthenticationPrincipal UsuarioPrincipal, não o
-    // UserDetails genérico que @WithMockUser cria — por isso autenticamos
-    // "de verdade" com um UsuarioPrincipal via este RequestPostProcessor.
+    // Autentica com um UsuarioPrincipal, exigido pelo @AuthenticationPrincipal do controller.
     private RequestPostProcessor autenticadoComo(Usuario usuario) {
         return user(new UsuarioPrincipal(usuario));
     }
@@ -220,8 +213,7 @@ class VendaControllerTest {
 
     @Test
     void finalizar_comConflitoDeConcorrencia_deveRetornar409SemGravarNada() throws Exception {
-        // Simula dois vendedores vendendo a última unidade ao mesmo tempo: o
-        // UPDATE do segundo encontra a versão do produto já alterada.
+        // Simula duas vendas simultâneas da última unidade.
         when(vendaService.finalizar(any(VendaRequest.class), any(Usuario.class)))
                 .thenThrow(new ObjectOptimisticLockingFailureException(Produto.class, 5L));
 

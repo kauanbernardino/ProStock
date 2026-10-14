@@ -8,9 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Consultas dinâmicas de produto (Spring Data JPA Specification).
- */
+/** Consultas dinâmicas de produto (Specification). */
 public final class ProdutoEspecificacoes {
 
     private static final char ESCAPE = '\\';
@@ -18,15 +16,7 @@ public final class ProdutoEspecificacoes {
     private ProdutoEspecificacoes() {
     }
 
-    /**
-     * Busca de balcão: produtos ativos em que CADA palavra digitada aparece no
-     * nome, no SKU ou na descrição (onde fica a aplicação: veículo, motor, ano).
-     *
-     * Ex.: "gol 1997" encontra o cabo de vela cuja descrição diz
-     * "VW Gol bola 1.0 16V (1997-1999)", mesmo sem "gol" nem "1997" no nome.
-     * Não diferencia maiúsculas de minúsculas, e %/_ digitados são tratados
-     * como texto comum (não como curinga do LIKE).
-     */
+    /** Produtos ativos em que cada palavra buscada aparece no nome, no SKU ou na descrição (aplicação). % e _ são tratados como texto. */
     public static Specification<Produto> ativosComTermos(String busca) {
         return (root, query, cb) -> {
             List<Predicate> condicoes = new ArrayList<>();

@@ -19,11 +19,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * UC03: relatório gerencial de valor em estoque e giro de peças — o
- * administrador escolhe um período (e opcionalmente uma categoria) e o
- * sistema processa os dados do banco e devolve o resumo financeiro.
- */
+/** UC03: valor em estoque e giro por produto num período, com filtro opcional de categoria. */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -77,11 +73,7 @@ public class RelatorioService {
                 totalEntradas, totalSaidas, giroMedio == null ? BigDecimal.ZERO : giroMedio, itens);
     }
 
-    /**
-     * Giro = saídas no período ÷ estoque atual. Sem estoque atual, a divisão
-     * não faz sentido (indefinida) — devolve null em vez de forçar um valor
-     * artificial, e o front-end mostra "—" nesse caso.
-     */
+    /** Giro (%) = saídas no período / estoque atual; null quando o estoque atual é zero. */
     private BigDecimal calcularGiro(long saidas, long quantidadeAtual) {
         if (quantidadeAtual <= 0) {
             return null;

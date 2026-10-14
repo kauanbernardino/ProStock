@@ -134,8 +134,7 @@ class VendaServiceTest {
 
     @Test
     void finalizar_comUmItemSemEstoque_naoDeveBaixarNenhumItemDaVenda() {
-        // Regra central do TCC: a venda é tudo ou nada. O primeiro item tem
-        // estoque, o segundo não — nenhum dos dois pode ser baixado.
+        // Um item sem estoque impede a venda inteira.
         Produto semEstoque = Produto.builder()
                 .id(2L).nome("Disco de Freio").sku("DF-002")
                 .preco(new BigDecimal("150.00"))

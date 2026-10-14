@@ -9,12 +9,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/**
- * Com CookieCsrfTokenRepository, o token é resolvido "sob demanda" (deferred).
- * Esse filtro força a resolução em toda requisição para garantir que o
- * cookie XSRF-TOKEN já esteja presente antes do frontend precisar dele
- * (ex.: na primeira requisição de login).
- */
+/** Gera o token CSRF em toda requisição, para o cookie XSRF-TOKEN existir antes do primeiro POST (o login). */
 public class CsrfCookieFilter extends OncePerRequestFilter {
 
     @Override

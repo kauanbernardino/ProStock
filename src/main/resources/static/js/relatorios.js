@@ -15,7 +15,7 @@ let periodoCarregado = { de: "", ate: "" };
 })();
 
 function definirPeriodoPadrao() {
-    // Mês corrente até hoje — ponto de partida comum, o usuário ajusta se quiser outro período.
+    // Período padrão: do dia 1º do mês até hoje.
     const hoje = new Date();
     const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     document.getElementById("filtro-de").value = paraDataInput(primeiroDiaMes);

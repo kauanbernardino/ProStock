@@ -15,10 +15,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Testa a consulta de verdade (JPA + banco em memória H2), não um mock: é aqui
- * que se garante que "gol 1997" acha a peça pela aplicação escrita na descrição.
- */
+/** Executa a consulta real num banco H2 em memória. */
 @DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.jpa.properties.hibernate.hbm2ddl.create_namespaces=true"

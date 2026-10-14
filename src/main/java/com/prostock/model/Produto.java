@@ -77,15 +77,7 @@ public class Produto {
     @Builder.Default
     private boolean ativo = true;
 
-    /**
-     * Controle de concorrência otimista. O Hibernate grava
-     * "UPDATE ... WHERE id = ? AND versao = ?" e incrementa a versão a cada
-     * alteração. Se dois vendedores venderem a última unidade ao mesmo tempo,
-     * os dois leem a mesma versão, mas só o primeiro UPDATE encontra a linha:
-     * o segundo afeta 0 linhas, a transação inteira dele é desfeita e a API
-     * responde 409 (ver GlobalExceptionHandler). Sem isso, o segundo
-     * sobrescreveria o primeiro e o sistema registraria duas vendas de uma peça.
-     */
+    /** Lock otimista: impede que duas operações simultâneas sobrescrevam o estoque. */
     @Version
     @Column(nullable = false)
     private Long versao;

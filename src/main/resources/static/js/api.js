@@ -1,5 +1,4 @@
-// Cliente HTTP simples para a API do ProStock.
-// Usa cookies de sessão (JSESSIONID) — não é necessário manipular tokens.
+// Cliente HTTP da API do ProStock (sessão por cookie e token CSRF).
 
 function obterCookie(nome) {
     const alvo = nome + "=";

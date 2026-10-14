@@ -5,17 +5,7 @@ import org.springframework.boot.SpringApplication;
 
 import java.util.Arrays;
 
-/**
- * Sobe o ProStock apontando para o banco de DEMONSTRAÇÃO (prostock_demo), com
- * ~7 meses de operação simulada de uma loja de autopeças.
- *
- * Na primeira execução o banco é criado e populado automaticamente. Para
- * gerar tudo de novo (com as datas atualizadas para "hoje"), rode com o
- * argumento --recriar-demo — útil na véspera da apresentação, para o gráfico
- * da semana e a previsão de demanda refletirem os últimos dias.
- *
- * O banco de uso real (prostock) não é tocado.
- */
+/** Sobe o ProStock com o banco de demonstração (prostock_demo). O argumento --recriar-demo gera os dados de novo, com as datas atualizadas. */
 public final class ProStockDemoApplication {
 
     private ProStockDemoApplication() {

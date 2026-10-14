@@ -34,9 +34,7 @@ public class DashboardService {
     private final AlertaRepository alertaRepository;
     private final MovimentacaoRepository movimentacaoRepository;
 
-    /**
-     * UC13: monitoramento do nível de estoque em tempo real / painel geral (UC08/UC09).
-     */
+    /** UC13: indicadores do painel geral. */
     public DashboardResponse obterDashboard() {
         BigDecimal valorTotal = produtoRepository.calcularValorTotalEmEstoque();
         Long quantidadeTotal = produtoRepository.calcularQuantidadeTotalEmEstoque();
@@ -50,15 +48,7 @@ public class DashboardService {
                 valorTotal, quantidadeTotal, totalProdutos, abaixoDoMinimo, emRuptura, acimaDoMaximo, alertasNaoLidos);
     }
 
-    /**
-     * UC09: sugestão de compra para produtos abaixo do estoque mínimo.
-     * A quantidade sugerida cruza a média de saída dos últimos 3 meses (UC12)
-     * com os limites cadastrados: repõe o suficiente para cobrir
-     * MESES_COBERTURA_SUGESTAO meses de vendas, nunca menos do que o
-     * necessário para voltar ao mínimo, e nunca mais do que o espaço até o
-     * máximo — assim um item que quase não vende não recebe a mesma sugestão
-     * de compra que um item de giro rápido.
-     */
+    /** UC09: sugestão de compra. Cobre MESES_COBERTURA_SUGESTAO meses da demanda média, no mínimo até o estoque mínimo e no máximo até o estoque máximo. */
     public List<SugestaoCompraResponse> sugestoesDeCompra() {
         return produtoRepository.findProdutosAbaixoDoEstoqueMinimo().stream()
                 .map(p -> {
@@ -90,9 +80,7 @@ public class DashboardService {
                 .toList();
     }
 
-    /**
-     * UC12: previsão de demanda com base na média de saída dos últimos 3 meses.
-     */
+    /** UC12: média mensal de saídas dos últimos 3 meses. */
     public PrevisaoDemandaResponse previsaoDemanda(Long produtoId) {
         Produto produto = produtoRepository.findById(produtoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado: " + produtoId));
@@ -120,10 +108,7 @@ public class DashboardService {
                 .toList();
     }
 
-    /**
-     * Gráfico semanal: por dia dos últimos 7 dias (hoje incluído), quantas peças
-     * entraram e saíram e em quantas movimentações.
-     */
+    /** Entradas e saídas de cada um dos últimos 7 dias. */
     public List<GraficoSemanalResponse> graficoSemanal() {
         List<GraficoSemanalResponse> resultado = new ArrayList<>();
         LocalDate hoje = LocalDate.now();

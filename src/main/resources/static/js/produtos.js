@@ -161,8 +161,7 @@ function abrirModal(id, produtosCarregados) {
         document.getElementById("produto-sku").value = produto.sku;
         document.getElementById("produto-descricao").value = produto.descricao || "";
         document.getElementById("produto-preco").value = produto.preco;
-        // UC07: a quantidade pode ser corrigida aqui (contagem física). O backend não
-        // grava o número direto: registra a diferença como movimentação de ajuste.
+        // UC07: a quantidade editada vira ajuste de inventário no backend.
         document.getElementById("produto-quantidade").value = produto.quantidadeAtual;
         document.getElementById("produto-quantidade").disabled = false;
         document.getElementById("dica-ajuste-inventario").style.display = "block";
@@ -209,8 +208,7 @@ async function salvarProduto(evento) {
         if (id) {
             await api.put(`/api/produtos/${id}`, corpo);
 
-            // UC07: se a quantidade digitada difere do saldo do sistema, registra o ajuste
-            // de inventário (a edição do cadastro, por regra, nunca altera o estoque).
+            // UC07: quantidade diferente do saldo registra ajuste de inventário.
             const quantidadeContada = corpo.quantidadeAtual;
             if (produtoEmEdicao && quantidadeContada !== produtoEmEdicao.quantidadeAtual) {
                 try {
@@ -229,7 +227,7 @@ async function salvarProduto(evento) {
         } else {
             const criado = await api.post("/api/produtos", corpo);
             await carregarProdutos();
-            // Reabre já em modo edição para permitir adicionar fotos.
+            // Reabre em modo edição para adicionar fotos.
             abrirModal(criado.id, [criado]);
             return;
         }
@@ -258,7 +256,7 @@ async function reativarProduto(id) {
     }
 }
 
-// ---------- Detalhes do produto (consulta, para qualquer perfil) ----------
+// ---------- Detalhes do produto ----------
 
 function abrirDetalhes(produto) {
     document.getElementById("detalhes-titulo").textContent = produto.nome;

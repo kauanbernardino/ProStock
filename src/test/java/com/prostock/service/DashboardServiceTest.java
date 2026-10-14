@@ -82,8 +82,7 @@ class DashboardServiceTest {
 
     @Test
     void sugestoesDeCompra_produtoDeGiroRapido_deveSugerirCoberturaDeDoisMesesDeVenda() {
-        // Vende em média 10 un./mês (30 nos últimos 3 meses) — cobertura de 2 meses = 20,
-        // menos o que já tem em estoque (3) = 17.
+        // Média de 10/mês x 2 meses = 20, menos 3 em estoque = 17.
         Produto produto = produto(3, 5, 50, "10.00");
         when(produtoRepository.findProdutosAbaixoDoEstoqueMinimo()).thenReturn(List.of(produto));
         when(movimentacaoRepository.somarSaidasDoProdutoDesde(eq(1L), any(LocalDateTime.class))).thenReturn(30L);
@@ -98,8 +97,7 @@ class DashboardServiceTest {
 
     @Test
     void sugestoesDeCompra_produtoQueQuaseNaoVende_naoDeveSugerirEncherAteOMaximo() {
-        // Sem saídas nos últimos 3 meses — a sugestão deve se limitar a repor o mínimo (2),
-        // e não mais encher até o máximo (47) como a versão antiga fazia.
+        // Sem saídas: repõe só até o mínimo (2).
         Produto produto = produto(3, 5, 50, "10.00");
         when(produtoRepository.findProdutosAbaixoDoEstoqueMinimo()).thenReturn(List.of(produto));
         when(movimentacaoRepository.somarSaidasDoProdutoDesde(eq(1L), any(LocalDateTime.class))).thenReturn(0L);
@@ -112,8 +110,7 @@ class DashboardServiceTest {
 
     @Test
     void sugestoesDeCompra_coberturaNuncaUltrapassaOEstoqueMaximo() {
-        // Demanda altíssima (300 nos últimos 3 meses = 100/mês) pediria 200 de cobertura,
-        // mas o espaço até o máximo (50 - 3 = 47) deve ser o teto.
+        // Demanda de 100/mês pediria 200; o teto é o espaço até o máximo (47).
         Produto produto = produto(3, 5, 50, "10.00");
         when(produtoRepository.findProdutosAbaixoDoEstoqueMinimo()).thenReturn(List.of(produto));
         when(movimentacaoRepository.somarSaidasDoProdutoDesde(eq(1L), any(LocalDateTime.class))).thenReturn(300L);

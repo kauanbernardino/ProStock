@@ -51,13 +51,9 @@ public class VendaService {
         return vendaRepository.findAllByOrderByDataHoraDesc();
     }
 
-    /**
-     * Registra uma venda de balcão: valida o estoque de TODOS os itens antes
-     * de confirmar qualquer um (evita baixa parcial), decrementa o estoque,
-     * grava uma movimentação de SAÍDA/VENDA por item e reavalia alertas.
-     */
+    /** Finaliza a venda: confere o estoque de todos os itens, baixa o estoque, grava as movimentações e reavalia os alertas. */
     public Venda finalizar(VendaRequest request, Usuario usuario) {
-        // Consolida quantidades caso o mesmo produto apareça mais de uma vez no carrinho.
+        // Junta itens repetidos do carrinho.
         Map<Long, Integer> quantidadesPorProduto = new LinkedHashMap<>();
         for (ItemVendaRequest item : request.itens()) {
             quantidadesPorProduto.merge(item.produtoId(), item.quantidade(), Integer::sum);
@@ -73,7 +69,7 @@ public class VendaService {
             produtos.put(produtoId, produto);
         }
 
-        // Valida o estoque de todos os itens ANTES de alterar qualquer coisa.
+        // Confere todo o estoque antes de alterar qualquer item.
         for (Map.Entry<Long, Integer> entrada : quantidadesPorProduto.entrySet()) {
             Produto produto = produtos.get(entrada.getKey());
             int quantidadeSolicitada = entrada.getValue();
@@ -136,11 +132,7 @@ public class VendaService {
         return vendaSalva;
     }
 
-    /**
-     * Cancela uma venda: devolve as quantidades ao estoque, registra uma
-     * movimentação de ENTRADA/ESTORNO por item e reavalia os alertas. A venda
-     * permanece no histórico marcada como CANCELADA (não é apagada).
-     */
+    /** Cancela a venda: devolve o estoque com movimentações de estorno e marca a venda como CANCELADA. */
     public Venda cancelar(Long vendaId, Usuario usuario) {
         Venda venda = buscarPorId(vendaId);
 

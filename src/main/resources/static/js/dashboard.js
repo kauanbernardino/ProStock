@@ -140,11 +140,7 @@ function preencherSugestoes(sugestoes) {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Gráfico "Movimentações da semana": colunas agrupadas (entradas x saídas por
-// dia), eixo com escala, valor no topo de cada coluna, resumo da semana,
-// dica ao passar o mouse (ou focar com Tab) e tabela com os mesmos números.
-// ---------------------------------------------------------------------------
+// Gráfico "Movimentações da semana": colunas de entradas e saídas por dia.
 let dadosGraficoSemanal = [];
 let observadorGrafico = null;
 let primeiraRenderizacao = true;
@@ -233,7 +229,7 @@ function preencherTabelaSemanal(dados) {
     });
 }
 
-/** Escala "bonita": teto e passo redondos (0, 5, 10, 20, 25, 50, 100...). */
+/** Escala com teto e passo redondos. */
 function escalaEixo(maximo) {
     if (maximo <= 0) return { teto: 4, passo: 1 };
     const bruto = maximo / 4;
@@ -275,7 +271,7 @@ function renderizarColunas() {
     svg.setAttribute("viewBox", `0 0 ${largura} ${altura}`);
     svg.replaceChildren();
 
-    // Grade horizontal e valores do eixo (linhas finas, discretas)
+    // Grade horizontal e valores do eixo
     for (let v = 0; v <= teto + 1e-9; v += passo) {
         svg.appendChild(el("line", {
             x1: margem.esquerda, x2: largura - margem.direita, y1: y(v), y2: y(v),
@@ -291,7 +287,7 @@ function renderizarColunas() {
     const intervalo = 2;
     const tooltip = document.getElementById("grafico-tooltip");
     const animar = primeiraRenderizacao;
-    const compacto = larguraFaixa < 64;           // celular: só o dia da semana no eixo
+    const compacto = larguraFaixa < 64;           // em telas estreitas, só o dia da semana
 
     dados.forEach((d, i) => {
         const x0 = margem.esquerda + i * larguraFaixa;
@@ -333,7 +329,7 @@ function renderizarColunas() {
             x: centro, y: baseY + 20, "text-anchor": "middle", class: "rotulo-dia" + (ehHoje(d) ? " hoje" : ""),
         }, ehHoje(d) ? "hoje" : (compacto ? rotuloSemana(d) : rotuloCurto(d))));
 
-        // Faixa do dia inteiro: alvo do mouse/teclado (maior que as colunas).
+        // Área do dia inteiro, alvo do mouse e do teclado
         const faixa = el("rect", {
             x: x0 + 2, y: margem.topo - 10, width: larguraFaixa - 4, height: alturaUtil + 10, rx: 6,
             class: "faixa-dia", tabindex: 0, "aria-label":
@@ -352,7 +348,7 @@ function renderizarColunas() {
         faixa.addEventListener("focus", mostrar);
         faixa.addEventListener("pointerleave", esconder);
         faixa.addEventListener("blur", esconder);
-        grupo.appendChild(faixa); // por cima das colunas, para o mouse não "perder" o dia
+        grupo.appendChild(faixa); // por cima das colunas, para o mouse não perder o dia
 
         svg.appendChild(grupo);
     });

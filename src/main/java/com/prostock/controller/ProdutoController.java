@@ -25,10 +25,7 @@ public class ProdutoController {
 
     private final ProdutoService produtoService;
 
-    /**
-     * Sem parâmetro: todos os produtos ativos. Com "nome": busca pelo texto no
-     * nome, no SKU ou na aplicação (o parâmetro manteve o nome por compatibilidade).
-     */
+    /** Sem parâmetro, lista os ativos; com "nome", busca por nome, SKU ou aplicação. */
     @GetMapping
     public List<ProdutoResponse> listar(@RequestParam(required = false) String nome) {
         var produtos = (nome == null || nome.isBlank())
@@ -37,10 +34,7 @@ public class ProdutoController {
         return produtos.stream().map(ProdutoResponse::from).toList();
     }
 
-    /**
-     * Versão paginada da listagem, usada pela tela de cadastro de produtos
-     * para não carregar o catálogo inteiro de uma vez.
-     */
+    /** Listagem paginada da tela de Produtos. */
     @GetMapping("/pagina")
     public PaginaResponse<ProdutoResponse> listarPaginado(
             @RequestParam(required = false) String nome,
@@ -76,10 +70,7 @@ public class ProdutoController {
         return ProdutoResponse.from(produtoService.atualizar(id, request));
     }
 
-    /**
-     * UC07: ajuste de inventário (contagem física). Restrito ao Administrador
-     * pela regra de PATCH /api/produtos/** do SecurityConfig.
-     */
+    /** UC07: ajuste de inventário pela contagem física (só administrador). */
     @PatchMapping("/{id}/ajuste-inventario")
     public ProdutoResponse ajustarInventario(@PathVariable Long id,
                                              @Valid @RequestBody AjusteInventarioRequest request,

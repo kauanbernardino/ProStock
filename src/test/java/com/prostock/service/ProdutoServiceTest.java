@@ -146,8 +146,7 @@ class ProdutoServiceTest {
         when(fornecedorRepository.findById(1L)).thenReturn(Optional.of(fornecedor));
         when(produtoRepository.save(any(Produto.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // O request tenta enviar quantidadeAtual=999, mas isso não deve ser aplicado aqui:
-        // a quantidade em estoque só muda via movimentações.
+        // A quantidade do request é ignorada: o estoque só muda por movimentação.
         ProdutoRequest request = new ProdutoRequest(
                 "Pastilha Atualizada", "PF-001", null, BigDecimal.TEN, 999, 5, 50, null, 1L, 1L);
 
@@ -157,9 +156,7 @@ class ProdutoServiceTest {
         assertThat(atualizado.getNome()).isEqualTo("Pastilha Atualizada");
     }
 
-    // ---------------------------------------------------------------
-    // UC07 — ajuste de inventário (contagem física)
-    // ---------------------------------------------------------------
+    // UC07: ajuste de inventário
 
     private Produto produtoComEstoque(int quantidade) {
         return Produto.builder()
@@ -229,9 +226,7 @@ class ProdutoServiceTest {
         verifyNoInteractions(movimentacaoService);
     }
 
-    // ---------------------------------------------------------------
     // Busca por nome, SKU ou aplicação
-    // ---------------------------------------------------------------
 
     @Test
     @SuppressWarnings("unchecked")

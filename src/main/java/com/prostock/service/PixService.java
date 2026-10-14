@@ -8,12 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.regex.Pattern;
 
-/**
- * Gera o código Pix "copia e cola" (BR Code / EMV QR Code estático) seguindo
- * o padrão do Banco Central. Isso apenas monta uma string-alvo de pagamento
- * para o cliente colar no próprio aplicativo do banco — o ProStock nunca
- * processa, recebe ou confirma o pagamento em si.
- */
+/** Gera o código Pix "copia e cola" (BR Code estático do Banco Central). Não confirma o pagamento. */
 @Service
 public class PixService {
 
@@ -60,10 +55,7 @@ public class PixService {
         return semAcento.length() > tamanhoMaximo ? semAcento.substring(0, tamanhoMaximo) : semAcento;
     }
 
-    /**
-     * CRC16/CCITT-FALSE (poly 0x1021, init 0xFFFF) — checksum exigido pelo
-     * padrão EMV do Pix ao final do payload.
-     */
+    /** CRC16/CCITT-FALSE (polinômio 0x1021, início 0xFFFF), exigido no fim do payload Pix. */
     String crc16(String payload) {
         int crc = 0xFFFF;
         for (byte b : payload.getBytes(StandardCharsets.UTF_8)) {

@@ -28,10 +28,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * AuthController é o único ponto de entrada não autenticado do sistema —
- * merece atenção redobrada: é onde a sessão nasce.
- */
 @WebMvcTest(AuthController.class)
 @Import(SecurityConfig.class)
 class AuthControllerTest {
@@ -41,12 +37,11 @@ class AuthControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // Substitui a autenticação real (banco + BCrypt) por um dublê controlável.
+    // Dublê da autenticação real (banco + BCrypt).
     @MockBean
     private AuthenticationManager authenticationManager;
 
-    // A autenticação real (Spring Security) usa este bean para buscar o
-    // usuário no banco; aqui o AuthenticationManager já é um dublê.
+    // Necessário para o contexto de segurança subir.
     @MockBean
     private CustomUserDetailsService customUserDetailsService;
 

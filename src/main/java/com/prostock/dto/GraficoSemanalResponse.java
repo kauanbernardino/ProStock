@@ -2,13 +2,7 @@ package com.prostock.dto;
 
 import java.time.LocalDate;
 
-/**
- * Um dia do gráfico "Movimentações da semana".
- *
- * totalEntradas / totalSaidas = soma das quantidades (peças); movimentacoesDeEntrada /
- * movimentacoesDeSaida = quantos lançamentos houve (uma venda de 3 itens gera 3
- * movimentações de saída).
- */
+/** Um dia do gráfico semanal: total de peças e número de movimentações de entrada e de saída. */
 public record GraficoSemanalResponse(
         LocalDate dia,
         long totalEntradas,

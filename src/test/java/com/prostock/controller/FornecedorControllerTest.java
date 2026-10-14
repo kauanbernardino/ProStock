@@ -62,7 +62,7 @@ class FornecedorControllerTest {
     @Test
     @WithMockUser(roles = "ADMINISTRADOR")
     void criar_comCnpjInvalido_deveRetornar400() throws Exception {
-        // CNPJ com letras e menos de 14 dígitos — quebra o @Pattern do DTO.
+        // CNPJ inválido (letras e menos de 14 dígitos).
         FornecedorRequest invalido = new FornecedorRequest("Autopeças Rio Grande", "123ABC", null);
 
         mockMvc.perform(post("/api/fornecedores")

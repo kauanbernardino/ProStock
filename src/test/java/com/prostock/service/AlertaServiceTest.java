@@ -115,9 +115,7 @@ class AlertaServiceTest {
         verify(alertaRepository).save(alerta);
     }
 
-    // ---------------------------------------------------------------
-    // Alerta de excesso (quantidade acima do estoque máximo)
-    // ---------------------------------------------------------------
+    // Alerta de excesso
 
     private Produto produtoComMaximo(int quantidade, int maximo) {
         return Produto.builder()
@@ -164,9 +162,7 @@ class AlertaServiceTest {
         verify(alertaRepository).save(excessoAberto);
     }
 
-    // ---------------------------------------------------------------
-    // Estoque obsoleto (executado também pela rotina diária)
-    // ---------------------------------------------------------------
+    // Estoque obsoleto
 
     @Test
     void verificarEstoqueObsoleto_produtoSemAlertaRecente_deveCriarAlerta() {
@@ -186,8 +182,7 @@ class AlertaServiceTest {
 
     @Test
     void verificarEstoqueObsoleto_produtoJaAlertadoNosUltimos30Dias_naoDeveRepetirAlerta() {
-        // Cenário da rotina diária: o lojista marcou o alerta como lido ontem;
-        // hoje a verificação roda de novo e NÃO deve recriar o mesmo aviso.
+        // Alerta lido ontem não é recriado pela verificação de hoje.
         Produto parado = produtoCom(8, 5);
         when(produtoRepository.findProdutosSemSaidaDesde(any(LocalDateTime.class))).thenReturn(List.of(parado));
         when(alertaRepository.existsByProdutoIdAndTipoAndDataCriacaoAfter(
@@ -201,8 +196,7 @@ class AlertaServiceTest {
 
     @Test
     void produtoZerado_deveResolverEstoqueBaixoAbertoEFicarSoComRuptura() {
-        // Antes: ao zerar, o alerta de estoque baixo continuava aberto junto com
-        // o de ruptura, e o painel contava dois alertas para o mesmo problema.
+        // Ao zerar, fica só o alerta de ruptura.
         Produto produto = produtoCom(0, 5);
         Alerta baixoAberto = Alerta.builder().id(7L).produto(produto).tipo(TipoAlerta.ESTOQUE_BAIXO).lido(false).build();
         when(alertaRepository.existsByProdutoIdAndTipoAndLidoFalse(1L, TipoAlerta.RUPTURA)).thenReturn(false);

@@ -19,12 +19,7 @@ import java.util.List;
 public class AlertaService {
 
     private static final int MESES_PARA_OBSOLESCENCIA = 6;
-    /**
-     * Depois que um alerta de obsolescência é gerado (e mesmo que o lojista já
-     * o tenha marcado como lido), o mesmo produto só volta a ser sinalizado
-     * após este intervalo. Sem isso, a verificação diária automática recriaria
-     * o alerta todo dia assim que ele fosse lido.
-     */
+    /** Intervalo mínimo entre dois alertas de obsolescência do mesmo produto. */
     private static final int DIAS_ENTRE_ALERTAS_DE_OBSOLESCENCIA = 30;
 
     private final AlertaRepository alertaRepository;
@@ -47,14 +42,7 @@ public class AlertaService {
         alertaRepository.save(alerta);
     }
 
-    /**
-     * UC11: avalia o nível de estoque de um produto após uma movimentação e
-     * dispara (ou resolve) alertas de ruptura, estoque baixo e excesso.
-     *
-     * Excesso = quantidade ACIMA do estoque máximo. Atingir exatamente o
-     * máximo não é problema (é o teto até onde a sugestão de compra repõe);
-     * ultrapassá-lo significa capital parado além do planejado.
-     */
+    /** UC11: cria ou resolve os alertas de ruptura, estoque baixo e excesso. */
     public void avaliarNivelDeEstoque(Produto produto) {
         int quantidade = produto.getQuantidadeAtual();
 
@@ -69,9 +57,7 @@ public class AlertaService {
                 "Produto '" + produto.getNome() + "' (SKU " + produto.getSku() + ") ultrapassou o estoque máximo ("
                         + quantidade + " de no máximo " + produto.getEstoqueMaximo() + ")");
 
-        // Estoque baixo deixa de valer quando o produto volta acima do mínimo OU
-        // quando zera: aí a situação passou a ser ruptura, que tem alerta próprio.
-        // Sem isso o produto zerado ficava com dois alertas abertos ao mesmo tempo.
+        // Ao zerar, o estoque baixo dá lugar à ruptura.
         if (quantidade > produto.getEstoqueMinimo() || quantidade <= 0) {
             resolverAlertasAbertos(produto, TipoAlerta.ESTOQUE_BAIXO);
         }
@@ -83,10 +69,7 @@ public class AlertaService {
         }
     }
 
-    /**
-     * Produto inativado sai do estoque ativo: os alertas abertos dele deixam
-     * de fazer sentido e não devem continuar no painel e na tela de Alertas.
-     */
+    /** Ao inativar o produto, encerra os alertas abertos dele. */
     public void encerrarAlertasAbertos(Produto produto) {
         List<Alerta> abertos = alertaRepository.findByProdutoIdAndLidoFalse(produto.getId());
         abertos.forEach(alerta -> alerta.setLido(true));
@@ -118,12 +101,7 @@ public class AlertaService {
                 });
     }
 
-    /**
-     * UC "Alertar Estoque Obsoleto": produtos ativos, cadastrados há mais de
-     * MESES_PARA_OBSOLESCENCIA meses, sem nenhuma saída nesse período.
-     * Executado automaticamente todo dia (RotinasAgendadas) e também sob
-     * demanda pelo botão "Verificar estoque obsoleto".
-     */
+    /** Produtos ativos, cadastrados há mais de MESES_PARA_OBSOLESCENCIA meses, sem saída no período. */
     public List<Produto> verificarEstoqueObsoleto() {
         LocalDateTime agora = LocalDateTime.now();
         LocalDateTime limite = agora.minusMonths(MESES_PARA_OBSOLESCENCIA);

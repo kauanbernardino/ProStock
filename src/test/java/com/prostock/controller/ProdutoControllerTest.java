@@ -39,11 +39,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Testa o controller "de fora", como se fosse o navegador batendo na API:
- * sobe so a camada web (sem banco de verdade), aplicando as regras reais
- * de autenticacao/autorizacao/CSRF do SecurityConfig.
- */
+/** Testes da camada web com as regras reais do SecurityConfig, sem banco. */
 @WebMvcTest(ProdutoController.class)
 @Import(SecurityConfig.class)
 class ProdutoControllerTest {
@@ -57,8 +53,7 @@ class ProdutoControllerTest {
     @MockBean
     private ProdutoService produtoService;
 
-    // A autenticação real usa um CustomUserDetailsService para buscar o usuário;
-    // @WithMockUser nao passa por ele, entao um mock vazio basta.
+    // Necessário para o contexto de segurança subir.
     @MockBean
     private CustomUserDetailsService customUserDetailsService;
 
@@ -102,7 +97,7 @@ class ProdutoControllerTest {
     @Test
     @WithMockUser(roles = "FUNCIONARIO")
     void criar_comUsuarioFuncionario_deveRetornar403() throws Exception {
-        // Cadastrar produto e restrito a ADMINISTRADOR — funcionario nao pode.
+        // Cadastro de produto: só administrador.
         mockMvc.perform(post("/api/produtos")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -175,9 +170,7 @@ class ProdutoControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    // ---------------------------------------------------------------
-    // UC07 — ajuste de inventário
-    // ---------------------------------------------------------------
+    // UC07: ajuste de inventário
 
     private Usuario usuarioComCargo(Cargo cargo) {
         return Usuario.builder().id(1L).nome("Teste").email("teste@prostock.com")

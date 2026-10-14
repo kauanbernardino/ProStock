@@ -1,4 +1,4 @@
-// Protege páginas internas: exige sessão válida e ajusta a UI conforme o cargo do usuário.
+// Protege as páginas internas e ajusta a tela ao cargo do usuário.
 
 async function protegerPagina() {
     let usuario;
@@ -12,9 +12,7 @@ async function protegerPagina() {
     preencherUsuarioNaTopbar(usuario);
 
     if (usuario.cargo === "ADMINISTRADOR") {
-        // "display: revert" restaura o valor padrão do elemento (block, inline-flex,
-        // table-cell...) e vence o "display: none" da classe .somente-admin no CSS,
-        // o que "" sozinho não faria (só limparia um eventual estilo inline).
+        // "revert" restaura o display padrão do elemento, vencendo o display:none da classe.
         document.querySelectorAll(".somente-admin").forEach((el) => (el.style.display = "revert"));
     }
 
@@ -32,8 +30,7 @@ async function protegerPagina() {
     return usuario;
 }
 
-// Em telas estreitas a sidebar vira uma gaveta escondida (ver @media em
-// style.css); o botão hambúrguer no topo é o único jeito de abri-la.
+// Abre e fecha o menu lateral em telas estreitas.
 function configurarMenuMobile() {
     const botao = document.getElementById("btn-menu");
     const sidebar = document.querySelector(".sidebar");
@@ -113,10 +110,7 @@ function escaparHtml(texto) {
     return div.innerHTML;
 }
 
-/**
- * Janelas de consulta (detalhes): fecham pelo botão com [data-fechar], clicando
- * no fundo escuro ou com a tecla Esc (só a janela aberta por cima de todas).
- */
+/** Janelas de detalhes: fecham pelo botão [data-fechar], pelo fundo ou pela tecla Esc. */
 function abrirJanela(id) {
     document.getElementById(id).classList.add("aberto");
 }
@@ -149,7 +143,7 @@ function tornarLinhaClicavel(linha, aoAbrir) {
     linha.classList.add("linha-clicavel");
     linha.tabIndex = 0;
     linha.addEventListener("click", (evento) => {
-        // Botões da coluna Ações continuam fazendo só o que fazem.
+        // Cliques em botões da linha não abrem os detalhes.
         if (evento.target.closest("button, a, input")) return;
         aoAbrir();
     });

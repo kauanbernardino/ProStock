@@ -83,11 +83,7 @@ async function buscarProdutos() {
     }
 }
 
-/**
- * Trecho da descrição que diz em qual veículo a peça serve. Peças com o mesmo
- * nome (ex.: dois cabos de vela) só se diferenciam por aqui. Usa o texto depois
- * de "Aplicação:" quando existir; senão, o começo da descrição.
- */
+/** Trecho da descrição com a aplicação do veículo (texto após "Aplicação:", ou o começo da descrição). */
 function aplicacao(produto) {
     const descricao = (produto.descricao || "").trim();
     if (!descricao) return "";
@@ -274,9 +270,7 @@ function renderizarQrCodePix(textoCopiaECola) {
         qr.make();
         contador.innerHTML = qr.createSvgTag({ scalable: true });
     } catch (erro) {
-        // Se o texto for grande demais para o QR (não deve ocorrer com o
-        // payload Pix padrão), a caixa fica em branco e o cliente ainda
-        // consegue pagar pelo código "copia e cola" logo abaixo.
+        // Texto grande demais para o QR: fica só o código copia e cola.
         contador.innerHTML = "";
     }
 }

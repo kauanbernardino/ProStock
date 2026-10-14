@@ -69,7 +69,7 @@ class AlertaControllerTest {
     @Test
     @WithMockUser(roles = "FUNCIONARIO")
     void marcarComoLido_comUsuarioFuncionario_deveRetornar204() throws Exception {
-        // Dar baixa em alerta é liberado para ambos os cargos (ao contrário do cadastro de produto).
+        // Marcar alerta como lido: os dois perfis.
         mockMvc.perform(patch("/api/alertas/1/lido").with(csrf()))
                 .andExpect(status().isNoContent());
     }
@@ -77,7 +77,7 @@ class AlertaControllerTest {
     @Test
     @WithMockUser(roles = "FUNCIONARIO")
     void verificarObsolescencia_comUsuarioFuncionario_deveRetornar403() throws Exception {
-        // Este POST específico é restrito a ADMINISTRADOR, diferente do resto do controller.
+        // Verificar obsolescência: só administrador.
         mockMvc.perform(post("/api/alertas/verificar-obsolescencia").with(csrf()))
                 .andExpect(status().isForbidden());
     }

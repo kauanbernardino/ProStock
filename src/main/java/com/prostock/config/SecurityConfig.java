@@ -31,11 +31,7 @@ public class SecurityConfig {
         return new HttpSessionSecurityContextRepository();
     }
 
-    /**
-     * O Spring Security monta sozinho a autenticação por banco a partir dos
-     * dois beans do projeto: CustomUserDetailsService (busca o usuário pelo
-     * e-mail) e o PasswordEncoder acima (confere a senha com BCrypt).
-     */
+    /** Autenticação montada pelo Spring a partir do CustomUserDetailsService e do PasswordEncoder (BCrypt). */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
@@ -55,27 +51,26 @@ public class SecurityConfig {
                         .requestMatchers("/", "/*.html", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
 
-                        // Administrador: gerencia usuários e permissões (UC01)
+                        // Usuários: só administrador
                         .requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
 
-                        // Consultas (produtos, categorias, fornecedores, motivos, movimentações,
-                        // alertas, vendas e dashboard) ficam disponíveis para ambos os perfis (UC06, UC10, UC13)
+                        // Consultas: os dois perfis
                         .requestMatchers(HttpMethod.GET,
                                 "/api/produtos/**", "/api/categorias/**", "/api/fornecedores/**",
                                 "/api/motivos/**", "/api/movimentacoes/**", "/api/alertas/**", "/api/dashboard/**",
                                 "/api/vendas/**"
                         ).hasAnyRole("ADMINISTRADOR", "FUNCIONARIO")
 
-                        // Funcionário registra movimentações, vendas e concilia alertas (UC02, UC04, UC05, UC10)
+                        // Movimentações, vendas e alertas: os dois perfis
                         .requestMatchers(HttpMethod.POST, "/api/movimentacoes", "/api/vendas")
                                 .hasAnyRole("ADMINISTRADOR", "FUNCIONARIO")
                         .requestMatchers(HttpMethod.PATCH, "/api/alertas/**", "/api/vendas/**")
                                 .hasAnyRole("ADMINISTRADOR", "FUNCIONARIO")
 
-                        // Relatórios gerenciais são restritos ao Administrador (UC03)
+                        // Relatórios: só administrador
                         .requestMatchers(HttpMethod.GET, "/api/relatorios/**").hasRole("ADMINISTRADOR")
 
-                        // Cadastro de produtos, categorias, fornecedores e motivos é restrito ao Administrador (UC08)
+                        // Cadastros: só administrador
                         .requestMatchers(HttpMethod.POST, "/api/produtos/**", "/api/categorias/**",
                                 "/api/fornecedores/**", "/api/motivos/**", "/api/alertas/verificar-obsolescencia"
                         ).hasRole("ADMINISTRADOR")
