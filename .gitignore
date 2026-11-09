@@ -9,3 +9,8 @@ uploads/
 /config/
 # Fotos copiadas pela aplicação de demonstração
 uploads-demo/
+
+# Arquivos do IDE (pessoais de cada máquina)
+.idea/
+*.iml
+.vscode/
